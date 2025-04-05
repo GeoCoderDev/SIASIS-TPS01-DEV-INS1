@@ -86,8 +86,11 @@ async function main() {
     console.log("Datos de asistencia generados y guardados correctamente.");
   } catch (error) {
     console.error("Error al generar datos de asistencia:", error);
+    process.exit(1); // Terminar con código de error
   } finally {
     await closePool();
+    console.log("Conexiones cerradas. Finalizando proceso...");
+    process.exit(0); // Terminar con código de éxito
   }
 }
 
