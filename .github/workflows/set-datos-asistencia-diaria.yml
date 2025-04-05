@@ -4,32 +4,30 @@ on:
   schedule:
     # Ejecutar a las 5:00 AM hora de Perú (UTC-5) de lunes a viernes
     # En GitHub Actions se usa UTC, por lo que 5:00 AM en Perú es 10:00 AM UTC
-    - cron: '0 10 * * 1-5'
-  
+    - cron: "0 10 * * 1-5"
+
   # Permite la ejecución manual para pruebas
   workflow_dispatch:
 
 jobs:
   ejecutar-script-asistencia:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout del repositorio
         uses: actions/checkout@v3
-      
+
       - name: Configurar Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
-          cache: 'npm'
-      
+          node-version: "18"
+          cache: "npm"
+
       - name: Instalar dependencias
         run: npm ci
-      
+
       - name: Ejecutar script de asistencia diaria
         run: npx ts-node ./src/jobs/asistencia/setDatosAsistenciaDiaria.ts
         env:
-          # Define aquí las variables de entorno que necesita tu script
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
-          # Agrega otras variables de entorno según sea necesario
+          DATABASE_URL: ${{ secrets.RDP02_INS1_DATABASE_URL }}
+          BLOB_READ_WRITE_TOKEN: ${{ secrets.VERCEL_BLOB_INS1_READ_WRITE_TOKEN }}
