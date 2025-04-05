@@ -26,11 +26,11 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
-      - name: Compilar TypeScript
-        run: npx tsc
+      - name: Instalar ts-node
+        run: npm install -g ts-node typescript
 
-      - name: Ejecutar script de asistencia diaria
-        run: node ./dist/jobs/asistencia/SetDatosAsistenciaDiaria.js
+      - name: Ejecutar script con ts-node
+        run: ts-node ./src/jobs/asistencia/SetDatosAsistenciaDiaria.ts
         env:
           DATABASE_URL: ${{ secrets.RDP02_INS1_DATABASE_URL }}
           BLOB_READ_WRITE_TOKEN: ${{ secrets.VERCEL_BLOB_INS1_READ_WRITE_TOKEN }}
