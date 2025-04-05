@@ -29,8 +29,6 @@ jobs:
       - name: Instalar ts-node y pg
         run: npm install -g ts-node typescript && npm install pg
 
-      - name: Verificar conexión a la base de datos
-
       - name: Ejecutar script con ts-node
         run: |
           echo "Ejecutando script..."
