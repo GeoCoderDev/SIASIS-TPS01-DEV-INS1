@@ -26,11 +26,56 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
-      - name: Instalar ts-node
-        run: npm install -g ts-node typescript
+      - name: Instalar ts-node y pg
+        run: npm install -g ts-node typescript && npm install pg
+
+      - name: Verificar conexión a la base de datos
+        run: |
+          echo "Probando conexión a la base de datos..."
+          node -e "
+          const { Client } = require('pg');
+          
+          async function testConnection() {
+            const client = new Client({
+              connectionString: process.env.DATABASE_URL,
+              ssl: {
+                rejectUnauthorized: false
+              }
+            });
+            
+            try {
+              await client.connect();
+              console.log('Conexión exitosa a la base de datos!');
+              const result = await client.query('SELECT NOW()');
+              console.log('Hora actual en la BD:', result.rows[0].now);
+              await client.end();
+              return true;
+            } catch (error) {
+              console.error('Error al conectar a la base de datos:', error);
+              return false;
+            }
+          }
+          
+          testConnection()
+            .then(success => {
+              if (!success) process.exit(1);
+            })
+            .catch(err => {
+              console.error('Error inesperado:', err);
+              process.exit(1);
+            });
+          "
+        env:
+          DATABASE_URL: ${{ secrets.RDP02_INS1_DATABASE_URL }}
 
       - name: Ejecutar script con ts-node
-        run: ts-node ./src/jobs/asistencia/SetDatosAsistenciaDiaria.ts
+        run: |
+          echo "Estableciendo variables de entorno..."
+          export DATABASE_URL="${{ secrets.RDP02_INS1_DATABASE_URL }}"
+          export BLOB_READ_WRITE_TOKEN="${{ secrets.VERCEL_BLOB_INS1_READ_WRITE_TOKEN }}"
+          
+          echo "Ejecutando script..."
+          ts-node ./src/jobs/asistencia/SetDatosAsistenciaDiaria.ts
         env:
           DATABASE_URL: ${{ secrets.RDP02_INS1_DATABASE_URL }}
           BLOB_READ_WRITE_TOKEN: ${{ secrets.VERCEL_BLOB_INS1_READ_WRITE_TOKEN }}
