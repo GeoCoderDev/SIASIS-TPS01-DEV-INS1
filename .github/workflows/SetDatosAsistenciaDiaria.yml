@@ -32,7 +32,7 @@ jobs:
       - name: Verificar conexión a la base de datos
 
       - name: Ejecutar script con ts-node
-        run:
+        run: |
           echo "Ejecutando script..."
           ts-node ./src/jobs/asistencia/SetDatosAsistenciaDiaria.ts
         env:
