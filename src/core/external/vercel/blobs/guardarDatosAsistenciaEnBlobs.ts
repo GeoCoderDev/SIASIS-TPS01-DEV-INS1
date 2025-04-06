@@ -1,6 +1,7 @@
 // src/core/external/vercel/blobs/guardarDatosAsistenciaEnBlobs.ts
 import { put } from "@vercel/blob";
 import { DatosAsistenciaHoyIE20935 } from "../../../../interfaces/shared/Asistencia/DatosAsistenciaHoyIE20935";
+import { NOMBRE_ARCHIVO_CON_DATOS_ASISTENCIA_DIARIOS } from "../../../../constants/NOMBRE_ARCHIVOS_EN_BLOBS";
 
 export async function guardarDatosAsistenciaEnBlobs(
   datos: DatosAsistenciaHoyIE20935
@@ -56,7 +57,7 @@ export async function guardarDatosAsistenciaEnBlobs(
 
         // Guardar en el blob
         const blob = await put(
-          "datos-asistencia-hoy-ie20935.json",
+          NOMBRE_ARCHIVO_CON_DATOS_ASISTENCIA_DIARIOS,
           contenidoJSON,
           {
             access: "public",
