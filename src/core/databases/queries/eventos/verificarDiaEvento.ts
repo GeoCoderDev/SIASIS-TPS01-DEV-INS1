@@ -1,16 +1,23 @@
 // src/core/database/queries/eventos/verificarDiaEvento.ts
+import { T_Eventos } from "@prisma/client";
 import { query } from "../../connectors/postgres";
 
-export async function verificarDiaEvento(fecha: Date): Promise<boolean> {
+
+export async function verificarDiaEvento(fecha: Date): Promise<false | T_Eventos> {
   const fechaStr = fecha.toISOString().split("T")[0]; // Formato YYYY-MM-DD
 
   const sql = `
-    SELECT COUNT(*) as count
+    SELECT *
     FROM "T_Eventos"
     WHERE "Fecha_Inicio" <= $1 AND "Fecha_Conclusion" >= $1
+    LIMIT 1
   `;
 
   const result = await query(sql, [fechaStr]);
 
-  return result.rows[0].count > 0;
+  if (result.rows.length === 0) {
+    return false;
+  }
+
+  return result.rows[0] as T_Eventos;
 }
