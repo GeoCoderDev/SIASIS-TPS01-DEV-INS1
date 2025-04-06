@@ -10,10 +10,10 @@ import { obtenerHorariosGenerales } from "../../core/databases/queries/horarios/
 import { obtenerHorariosEscolares } from "../../core/databases/queries/horarios/obtenerHorariosEscolares";
 import { guardarDatosAsistenciaEnBlobs } from "../../core/external/vercel/blobs/guardarDatosAsistenciaEnBlobs";
 import { obtenerFechasActuales } from "../../core/utils/dates/obtenerFechasActuales";
-import verificarDentroAñoEscolar from "../../core/utils/verificators/verificarDentroAñoEscolar";
 import { obtenerFechasAñoEscolar } from "../../core/databases/queries/fechas-importantes/obtenerFechasAñoEscolar";
-import { verificarFueraVacacionesMedioAño } from "../../core/utils/verificators/verificarFueraVacacionesMedioAño";
+import { verificarDentroVacacionesMedioAño } from "../../core/utils/verificators/verificarFueraVacacionesMedioAño";
 import { closePool } from "../../core/databases/connectors/postgres";
+import verificarFueraAñoEscolar from "../../core/utils/verificators/verificarDentroAñoEscolar";
 
 async function generarDatosAsistenciaDiaria(): Promise<DatosAsistenciaHoyIE20935> {
   // Obtener fechas actuales
@@ -26,13 +26,13 @@ async function generarDatosAsistenciaDiaria(): Promise<DatosAsistenciaHoyIE20935
   const fechasAñoEscolar = await obtenerFechasAñoEscolar();
 
   // Verificar si estamos dentro del año escolar y fuera de vacaciones
-  const dentroAñoEscolar = verificarDentroAñoEscolar(
+  const fueraAñoEscolar = verificarFueraAñoEscolar(
     fechaLocalPeru,
     fechasAñoEscolar.Fecha_Inicio_Año_Escolar,
     fechasAñoEscolar.Fecha_Fin_Año_Escolar
   );
 
-  const fueraVacacionesMedioAño = verificarFueraVacacionesMedioAño(
+  const dentroVacacionesMedioAño = verificarDentroVacacionesMedioAño(
     fechaLocalPeru,
     fechasAñoEscolar.Fecha_Inicio_Vacaciones_Medio_Año,
     fechasAñoEscolar.Fecha_Fin_Vacaciones_Medio_Año
@@ -58,8 +58,8 @@ async function generarDatosAsistenciaDiaria(): Promise<DatosAsistenciaHoyIE20935
     DiaEvento: esDiaEvento,
     FechaUTC: fechaUTC,
     FechaLocalPeru: fechaLocalPeru,
-    DentroAñoEscolar: dentroAñoEscolar,
-    FueraVacionesMedioAño: fueraVacacionesMedioAño,
+    FueraAñoEscolar: fueraAñoEscolar,
+    DentroVacionesMedioAño: dentroVacacionesMedioAño,
     ComunicadosParaMostrarHoy: comunicados,
     ListaDePersonalesAdministrativos: personalAdministrativo,
     ListaDeProfesoresPrimaria: profesoresPrimaria,

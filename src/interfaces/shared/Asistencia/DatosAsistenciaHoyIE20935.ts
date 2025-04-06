@@ -51,13 +51,18 @@ export type ProfesorTutorSecundariaParaTomaDeAsistencia = Pick<
   Hora_Salida_Dia_Actual: Date;
 };
 
+export interface RangoFechas {
+  Inicio: Date;
+  Fin: Date;
+}
+
 export interface DatosAsistenciaHoyIE20935 {
   DiaEvento: false | T_Eventos;
   FechaUTC: Date;
   FechaLocalPeru: Date;
 
-  DentroAñoEscolar: boolean;
-  FueraVacionesMedioAño: boolean;
+  FueraAñoEscolar: false | RangoFechas;
+  DentroVacionesMedioAño: false | RangoFechas;
 
   ComunicadosParaMostrarHoy: T_Comunicados[];
 
@@ -84,8 +89,8 @@ export type BaseAsistenciaResponse = Pick<
   | "DiaEvento"
   | "FechaUTC"
   | "FechaLocalPeru"
-  | "DentroAñoEscolar"
-  | "FueraVacionesMedioAño"
+  | "FueraAñoEscolar"
+  | "DentroVacionesMedioAño"
   | "ComunicadosParaMostrarHoy"
 >;
 
