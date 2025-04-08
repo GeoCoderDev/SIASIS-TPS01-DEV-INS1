@@ -20,14 +20,17 @@ function calcularHoraConRecreo(
   duracionHoraAcademicaMinutos: number,
   esHoraSalida: boolean = false
 ): Date {
+  // Validar índice para asegurarnos que está dentro del rango permitido (1-7)
+  const indiceValido = Math.max(1, Math.min(indice, 7));
+  
   const resultado = new Date(horaBaseDate);
 
   // Determinar cuántos minutos adicionar considerando el recreo
   let minutosAdicionales = 0;
 
-  if (indice <= bloqueInicioRecreo) {
+  if (indiceValido <= bloqueInicioRecreo) {
     // Para bloques antes o igual al bloque de recreo
-    minutosAdicionales = (indice - 1) * duracionHoraAcademicaMinutos;
+    minutosAdicionales = (indiceValido - 1) * duracionHoraAcademicaMinutos;
 
     // Si es hora de salida, añadir la duración del bloque para obtener la hora de finalización
     if (esHoraSalida) {
@@ -36,7 +39,7 @@ function calcularHoraConRecreo(
   } else {
     // Para bloques después del recreo
     minutosAdicionales =
-      (indice - 1) * duracionHoraAcademicaMinutos + duracionRecreoMinutos;
+      (indiceValido - 1) * duracionHoraAcademicaMinutos + duracionRecreoMinutos;
 
     // Si es hora de salida, añadir la duración del bloque para obtener la hora de finalización
     if (esHoraSalida) {
@@ -155,14 +158,19 @@ export async function obtenerProfesoresSecundariaParaTomarAsistencia(
         false // No es hora de salida
       );
 
-      // Calcular hora de salida
+      // Utilizamos el enfoque de índice efectivo: el "Indice_Salida" de la BD
+      // representa el índice del siguiente bloque después del último impartido,
+      // por lo que restamos 1 para obtener el índice del último bloque efectivo
+      const indiceSalidaEfectivo = profesor.Indice_Salida - 1;
+      
+      // Calculamos la hora de salida como el final de ese bloque efectivo
       const horaSalida = calcularHoraConRecreo(
         horaInicio,
-        profesor.Indice_Salida,
+        indiceSalidaEfectivo,
         bloqueInicioRecreo,
         duracionRecreoMinutos,
         DURACION_HORA_ACADEMICA_EN_MINUTOS,
-        true // Es hora de salida
+        true // Es hora de salida (final del bloque)
       );
 
       return {
