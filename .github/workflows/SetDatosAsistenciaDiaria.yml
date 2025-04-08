@@ -7,6 +7,14 @@ on:
     # Solo en meses de marzo (3) a diciembre (12)
     - cron: "0 10 * 3-12 1-5"
   
+  # # Añadido: Trigger para ejecutar en push a master
+  # push:
+  #   branches:
+  #     - master
+  
+  # Permite la ejecución manual para pruebas
+  workflow_dispatch:
+
 jobs:
   ejecutar-script-asistencia:
     runs-on: ubuntu-latest
