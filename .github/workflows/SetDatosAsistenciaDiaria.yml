@@ -8,9 +8,9 @@ on:
     - cron: "0 10 * 3-12 1-5"
   
   # # Añadido: Trigger para ejecutar en push a master
-  # push:
-  #   branches:
-  #     - master
+  push:
+    branches:
+      - master
   
   # Permite la ejecución manual para pruebas
   workflow_dispatch:
