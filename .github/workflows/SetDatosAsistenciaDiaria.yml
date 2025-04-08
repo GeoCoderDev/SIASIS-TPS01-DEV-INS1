@@ -11,9 +11,6 @@ on:
   push:
     branches:
       - master
-  
-  # Permite la ejecución manual para pruebas
-  workflow_dispatch:
 
 jobs:
   ejecutar-script-asistencia:
