@@ -1,4 +1,3 @@
-// src/core/database/queries/personal/obtenerProfesoresSecundaria.ts
 import { DURACION_HORA_ACADEMICA_EN_MINUTOS } from "../../../../constants/DURACION_HORA_ACADEMICA_EN_MINUTOS";
 import { ProfesorTutorSecundariaParaTomaDeAsistencia } from "../../../../interfaces/shared/Asistencia/DatosAsistenciaHoyIE20935";
 import { query } from "../../connectors/postgres";
@@ -10,6 +9,7 @@ import { query } from "../../connectors/postgres";
  * @param bloqueInicioRecreo - Bloque después del cual comienza el recreo
  * @param duracionRecreoMinutos - Duración del recreo en minutos
  * @param duracionHoraAcademicaMinutos - Duración de cada bloque académico
+ * @param esHoraSalida - Indica si estamos calculando hora de salida (fin de bloque)
  * @returns Date con la hora calculada
  */
 function calcularHoraConRecreo(
@@ -17,7 +17,8 @@ function calcularHoraConRecreo(
   indice: number,
   bloqueInicioRecreo: number,
   duracionRecreoMinutos: number,
-  duracionHoraAcademicaMinutos: number
+  duracionHoraAcademicaMinutos: number,
+  esHoraSalida: boolean = false
 ): Date {
   const resultado = new Date(horaBaseDate);
 
@@ -25,12 +26,22 @@ function calcularHoraConRecreo(
   let minutosAdicionales = 0;
 
   if (indice <= bloqueInicioRecreo) {
-    // Antes o justo al final del recreo, solo calculamos los minutos del bloque
+    // Para bloques antes o igual al bloque de recreo
     minutosAdicionales = (indice - 1) * duracionHoraAcademicaMinutos;
+
+    // Si es hora de salida, añadir la duración del bloque para obtener la hora de finalización
+    if (esHoraSalida) {
+      minutosAdicionales += duracionHoraAcademicaMinutos;
+    }
   } else {
-    // Después del recreo, sumamos los minutos del bloque + la duración del recreo
+    // Para bloques después del recreo
     minutosAdicionales =
       (indice - 1) * duracionHoraAcademicaMinutos + duracionRecreoMinutos;
+
+    // Si es hora de salida, añadir la duración del bloque para obtener la hora de finalización
+    if (esHoraSalida) {
+      minutosAdicionales += duracionHoraAcademicaMinutos;
+    }
   }
 
   // Extraer horas y minutos de la hora base
@@ -140,7 +151,8 @@ export async function obtenerProfesoresSecundariaParaTomarAsistencia(
         profesor.Indice_Entrada,
         bloqueInicioRecreo,
         duracionRecreoMinutos,
-        DURACION_HORA_ACADEMICA_EN_MINUTOS
+        DURACION_HORA_ACADEMICA_EN_MINUTOS,
+        false // No es hora de salida
       );
 
       // Calcular hora de salida
@@ -149,7 +161,8 @@ export async function obtenerProfesoresSecundariaParaTomarAsistencia(
         profesor.Indice_Salida,
         bloqueInicioRecreo,
         duracionRecreoMinutos,
-        DURACION_HORA_ACADEMICA_EN_MINUTOS
+        DURACION_HORA_ACADEMICA_EN_MINUTOS,
+        true // Es hora de salida
       );
 
       return {
