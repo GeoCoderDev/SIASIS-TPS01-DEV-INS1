@@ -2,10 +2,10 @@ name: Ejecutar Script de Asistencia Diaria
 
 on:
   schedule:
-    # Ejecutar a las 5:00 AM hora de Perú (UTC-5) de lunes a viernes
+    # Ejecutar a las 4:00 AM hora de Perú (UTC-5) de lunes a viernes /Se retrocedio una hora, debido a posibles retrasos que podrian suceder en la ejecución
     # En GitHub Actions se usa UTC, por lo que 5:00 AM en Perú es 10:00 AM UTC
     # Solo en meses de marzo (3) a diciembre (12)
-    - cron: "0 10 * 3-12 1-5"
+    - cron: "0 9 * 3-12 1-5"
   
   # # Añadido: Trigger para ejecutar en push a master
   push:
