@@ -23,56 +23,76 @@ const pool = new Pool({
 const queryCache = new Map();
 const CACHE_TTL = 60000; // 1 minuto en milisegundos
 
-// Función para ejecutar consultas con caché opcional
+// Función para ejecutar consultas con caché opcional y reintentos
 export async function query(
   text: string,
   params?: any[],
-  useCache: boolean = false
+  useCache: boolean = false,
+  maxRetries: number = 3
 ) {
-  try {
-    // Intentar usar caché si está habilitado
-    if (useCache) {
-      const cacheKey = `${text}-${JSON.stringify(params || [])}`;
-      const cachedItem = queryCache.get(cacheKey);
+  let retries = 0;
+  let lastError;
 
-      if (cachedItem && Date.now() - cachedItem.timestamp < CACHE_TTL) {
-        console.log("Cache hit:", cacheKey);
-        return cachedItem.result;
-      }
-    }
-
-    // Si no hay caché o está desactualizado, ejecutar la consulta
-    const start = Date.now();
-    const client = await pool.connect();
-
+  while (retries < maxRetries) {
     try {
-      const res = await client.query(text, params);
-      const duration = Date.now() - start;
-
-      console.log("Query ejecutada", {
-        text: text.substring(0, 80) + (text.length > 80 ? "..." : ""),
-        duration,
-        filas: res.rowCount,
-      });
-
-      // Guardar en caché si está habilitado
+      // Intentar usar caché si está habilitado
       if (useCache) {
         const cacheKey = `${text}-${JSON.stringify(params || [])}`;
-        queryCache.set(cacheKey, {
-          timestamp: Date.now(),
-          result: res,
-        });
+        const cachedItem = queryCache.get(cacheKey);
+
+        if (cachedItem && Date.now() - cachedItem.timestamp < CACHE_TTL) {
+          console.log("Cache hit:", cacheKey);
+          return cachedItem.result;
+        }
       }
 
-      return res;
-    } finally {
-      // Siempre liberar el cliente al terminar
-      client.release();
+      // Si no hay caché o está desactualizado, ejecutar la consulta
+      const start = Date.now();
+      const client = await pool.connect();
+
+      try {
+        const res = await client.query(text, params);
+        const duration = Date.now() - start;
+
+        console.log("Query ejecutada", {
+          text: text.substring(0, 80) + (text.length > 80 ? "..." : ""),
+          duration,
+          filas: res.rowCount,
+        });
+
+        // Guardar en caché si está habilitado
+        if (useCache) {
+          const cacheKey = `${text}-${JSON.stringify(params || [])}`;
+          queryCache.set(cacheKey, {
+            timestamp: Date.now(),
+            result: res,
+          });
+        }
+
+        return res;
+      } finally {
+        // Siempre liberar el cliente al terminar
+        client.release();
+      }
+    } catch (error) {
+      lastError = error;
+      retries++;
+      console.error(`Error en intento ${retries}/${maxRetries}:`, error);
+
+      if (retries < maxRetries) {
+        // Espera exponencial entre reintentos (1s, 2s, 4s, etc.)
+        const waitTime = 1000 * Math.pow(2, retries - 1);
+        console.log(`Reintentando en ${waitTime / 1000} segundos...`);
+        await new Promise((resolve) => setTimeout(resolve, waitTime));
+      }
     }
-  } catch (error) {
-    console.error("Error en consulta SQL:", error);
-    throw error;
   }
+
+  console.error(
+    "Error en consulta SQL después de todos los reintentos:",
+    lastError
+  );
+  throw lastError;
 }
 
 // Función para cerrar el pool (útil al finalizar el script)
