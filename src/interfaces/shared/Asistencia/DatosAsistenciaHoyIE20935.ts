@@ -1,6 +1,7 @@
 import { NivelEducativo } from "../NivelEducativo";
 
 import {
+  T_Auxiliares,
   T_Comunicados,
   T_Eventos,
   T_Personal_Administrativo,
@@ -51,6 +52,11 @@ export type ProfesorTutorSecundariaParaTomaDeAsistencia = Pick<
   Hora_Salida_Dia_Actual: Date;
 };
 
+export type AuxiliaresParaTomaDeAsistencia = Pick<
+  T_Auxiliares,
+  "DNI_Auxiliar" | "Nombres" | "Apellidos" | "Genero" | "Google_Drive_Foto_ID"
+>;
+
 export interface RangoFechas {
   Inicio: Date;
   Fin: Date;
@@ -71,6 +77,8 @@ export interface DatosAsistenciaHoyIE20935 {
   ListaDeProfesoresPrimaria: ProfesoresPrimariaParaTomaDeAsistencia[];
 
   ListaDeProfesoresSecundaria: ProfesorTutorSecundariaParaTomaDeAsistencia[];
+
+  ListaDeAuxiliares: AuxiliaresParaTomaDeAsistencia[];
 
   HorariosLaboraresGenerales: {
     TomaAsistenciaRangoTotalPersonales: HorarioTomaAsistencia;

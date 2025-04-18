@@ -14,6 +14,7 @@ import { obtenerFechasAñoEscolar } from "../../core/databases/queries/fechas-im
 import { verificarDentroVacacionesMedioAño } from "../../core/utils/verificators/verificarFueraVacacionesMedioAño";
 import { closePool } from "../../core/databases/connectors/postgres";
 import verificarFueraAñoEscolar from "../../core/utils/verificators/verificarDentroAñoEscolar";
+import { obtenerAuxiliaresParaTomarAsistencia } from "../../core/databases/queries/auxiliares/obtenerAuxiliares";
 
 async function generarDatosAsistenciaDiaria(): Promise<DatosAsistenciaHoyIE20935> {
   // Obtener fechas actuales
@@ -49,6 +50,8 @@ async function generarDatosAsistenciaDiaria(): Promise<DatosAsistenciaHoyIE20935
   const profesoresSecundaria =
     await obtenerProfesoresSecundariaParaTomarAsistencia(fechaLocalPeru);
 
+  const auxiliares = await obtenerAuxiliaresParaTomarAsistencia();
+
   // Obtener configuraciones de horarios
   const horariosGenerales = await obtenerHorariosGenerales();
   const horariosEscolares = await obtenerHorariosEscolares();
@@ -61,6 +64,7 @@ async function generarDatosAsistenciaDiaria(): Promise<DatosAsistenciaHoyIE20935
     FueraAñoEscolar: fueraAñoEscolar,
     DentroVacionesMedioAño: dentroVacacionesMedioAño,
     ComunicadosParaMostrarHoy: comunicados,
+    ListaDeAuxiliares: auxiliares,
     ListaDePersonalesAdministrativos: personalAdministrativo,
     ListaDeProfesoresPrimaria: profesoresPrimaria,
     ListaDeProfesoresSecundaria: profesoresSecundaria,
