@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 
-import { getDriveClient } from "../../../repositories/GoogleDrive/getDriveClient";
+import { getDriveClient } from "../../../../config/GoogleDrive/getDriveClient";
 import { findOrCreateFolder } from "./findOrCreateFolder";
 
 /**

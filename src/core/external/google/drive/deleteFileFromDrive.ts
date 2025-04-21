@@ -1,4 +1,4 @@
-import { getDriveClient } from "../../../repositories/GoogleDrive/getDriveClient";
+import { getDriveClient } from "../../../../config/GoogleDrive/getDriveClient";
 
 // Función para eliminar un archivo de Google Drive
 export async function deleteFileFromDrive(fileId: string | null | undefined) {

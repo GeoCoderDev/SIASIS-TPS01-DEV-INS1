@@ -1,3 +1,4 @@
+import { redisClient } from "../../../../config/Redis/RedisClient";
 import { NOMBRE_ARCHIVO_CON_DATOS_ASISTENCIA_DIARIOS } from "../../../../constants/NOMBRE_ARCHIVOS_SISTEMA";
 import {
   buscarArchivoDatosAsistenciaDiariosEnBD,
@@ -45,8 +46,14 @@ export async function actualizarArchivoDatosAsistenciaEnGoogleDrive(
       folderPath,
       NOMBRE_ARCHIVO_CON_DATOS_ASISTENCIA_DIARIOS
     );
+    
+    // 4. Guardar ID del archivo subido en Redis
+    await redisClient.set(
+      NOMBRE_ARCHIVO_CON_DATOS_ASISTENCIA_DIARIOS,
+      nuevoArchivo.id
+    );
 
-    // 4. Actualizar los registros en la base de datos
+    // 5. Actualizar los registros en la base de datos
     console.log(`Archivo subido con éxito. Nuevo ID: ${nuevoArchivo.id}`);
     const registroBD = await registrarArchivoDatosAsistenciaDiariosEnBD(
       nuevoArchivo.id,
