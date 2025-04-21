@@ -1,7 +1,7 @@
 // src/core/external/vercel/blobs/guardarDatosAsistenciaEnBlobs.ts
 import { put } from "@vercel/blob";
 import { DatosAsistenciaHoyIE20935 } from "../../../../interfaces/shared/Asistencia/DatosAsistenciaHoyIE20935";
-import { NOMBRE_ARCHIVO_CON_DATOS_ASISTENCIA_DIARIOS } from "../../../../constants/NOMBRE_ARCHIVOS_EN_BLOBS";
+import { NOMBRE_ARCHIVO_CON_DATOS_ASISTENCIA_DIARIOS } from "../../../../constants/NOMBRE_ARCHIVOS_SISTEMA";
 
 export async function guardarDatosAsistenciaEnBlobs(
   datos: DatosAsistenciaHoyIE20935

@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("NO ES NECESARIO")
+  url      = env("RDP02_INS1_DATABASE_URL")
 }
 
 model T_Directivos {
@@ -141,7 +141,6 @@ model T_Control_Entrada_Mensual_Profesores_Primaria {
   Id_C_E_M_P_Profesores_Primaria Int                   @id @default(autoincrement())
   Mes                            Int                   @db.Integer
   Entradas                       Json
-  DNI_Auxiliar                   String                @db.VarChar(8)
   DNI_Profesor_Primaria          String                @db.VarChar(8)
   profesor_primaria              T_Profesores_Primaria @relation(fields: [DNI_Profesor_Primaria], references: [DNI_Profesor_Primaria])
 
@@ -152,7 +151,6 @@ model T_Control_Salida_Mensual_Profesores_Primaria {
   Id_C_E_M_P_Profesores_Primaria Int                   @id @default(autoincrement())
   Mes                            Int                   @db.Integer
   Salidas                        Json
-  DNI_Auxiliar                   String                @db.VarChar(8)
   DNI_Profesor_Primaria          String                @db.VarChar(8)
   profesor_primaria              T_Profesores_Primaria @relation(fields: [DNI_Profesor_Primaria], references: [DNI_Profesor_Primaria])
 
@@ -163,7 +161,6 @@ model T_Control_Entrada_Mensual_Profesores_Secundaria {
   Id_C_E_M_P_Profesores_Secundaria Int                     @id @default(autoincrement())
   Mes                              Int                     @db.Integer
   Entradas                         Json
-  DNI_Auxiliar                     String                  @db.VarChar(8)
   DNI_Profesor_Secundaria          String                  @db.VarChar(8)
   profesor_secundaria              T_Profesores_Secundaria @relation(fields: [DNI_Profesor_Secundaria], references: [DNI_Profesor_Secundaria])
 
@@ -174,7 +171,6 @@ model T_Control_Salida_Mensual_Profesores_Secundaria {
   Id_C_E_M_P_Profesores_Secundaria Int                     @id @default(autoincrement())
   Mes                              Int                     @db.Integer
   Salidas                          Json
-  DNI_Auxiliar                     String                  @db.VarChar(8)
   DNI_Profesor_Secundaria          String                  @db.VarChar(8)
   profesor_secundaria              T_Profesores_Secundaria @relation(fields: [DNI_Profesor_Secundaria], references: [DNI_Profesor_Secundaria])
 
@@ -481,4 +477,12 @@ model T_Fechas_Importantes {
   Ultima_Modificacion DateTime @default(now())
 
   @@map("T_Fechas_Importantes")
+}
+
+model T_Archivos_Respaldo_Google_Drive {
+  Id_Archivo_Respaldo Int      @id @default(autoincrement())
+  Nombre_Archivo      String   @db.VarChar(255)
+  Google_Drive_Id     String   @unique
+  Descripcion         String?  @db.Text
+  Ultima_Modificacion DateTime @default(now())
 }

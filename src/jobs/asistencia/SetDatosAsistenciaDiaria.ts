@@ -15,6 +15,9 @@ import { verificarDentroVacacionesMedioAño } from "../../core/utils/verificator
 import { closePool } from "../../core/databases/connectors/postgres";
 import verificarFueraAñoEscolar from "../../core/utils/verificators/verificarDentroAñoEscolar";
 import { obtenerAuxiliaresParaTomarAsistencia } from "../../core/databases/queries/auxiliares/obtenerAuxiliares";
+import { uploadJsonToDrive } from "../../core/external/google/drive/uploadJsonToDrive";
+import { NOMBRE_ARCHIVO_CON_DATOS_ASISTENCIA_DIARIOS } from "../../constants/NOMBRE_ARCHIVOS_SISTEMA";
+import { actualizarArchivoDatosAsistenciaEnGoogleDrive } from "../../core/external/google/drive/actualizarArchivoDatosAsistencia";
 
 async function generarDatosAsistenciaDiaria(): Promise<DatosAsistenciaHoyIE20935> {
   // Obtener fechas actuales
@@ -83,6 +86,9 @@ async function main() {
 
     // Guardar datos en Vercel Blob
     await guardarDatosAsistenciaEnBlobs(datosAsistencia);
+
+    //Guardar datos en archivo de respaldo correspondiente en Google Drive y en la BD
+    await actualizarArchivoDatosAsistenciaEnGoogleDrive(datosAsistencia);
 
     // Imprimir en consola para verificación
     console.log(JSON.stringify(datosAsistencia, null, 2));
