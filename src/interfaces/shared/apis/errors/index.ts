@@ -11,6 +11,7 @@ export enum RequestErrorTypes {
  * Errores relacionados con tokens de autenticación
  */
 export enum TokenErrorTypes {
+  TOKEN_UNAUTHORIZED = "TOKEN_UNAUTHORIZED",
   TOKEN_MISSING = "TOKEN_MISSING", // No se proporcionó token
   TOKEN_INVALID_FORMAT = "TOKEN_INVALID_FORMAT", // Formato Bearer inválido
   TOKEN_EXPIRED = "TOKEN_EXPIRED", // Token expirado
@@ -95,5 +96,5 @@ type AllErrorTypes =
   | DataConflictErrorTypes
   | FileErrorTypes
   | AuthenticationErrorTypes;
-  
+
 export default AllErrorTypes;

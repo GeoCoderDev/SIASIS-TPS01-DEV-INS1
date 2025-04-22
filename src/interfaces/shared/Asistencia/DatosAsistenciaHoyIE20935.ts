@@ -107,6 +107,7 @@ export interface DirectivoAsistenciaResponse extends BaseAsistenciaResponse {
   ListaDePersonalesAdministrativos: PersonalAdministrativoParaTomaDeAsistencia[];
   ListaDeProfesoresPrimaria: ProfesoresPrimariaParaTomaDeAsistencia[];
   ListaDeProfesoresSecundaria: ProfesorTutorSecundariaParaTomaDeAsistencia[];
+  ListaDeAuxiliares: AuxiliaresParaTomaDeAsistencia[];
   HorariosLaboraresGenerales: {
     TomaAsistenciaRangoTotalPersonales: HorarioTomaAsistencia;
     TomaAsistenciaProfesorPrimaria: HorarioTomaAsistencia;

@@ -14,8 +14,9 @@ import { obtenerFechasAñoEscolar } from "../../core/databases/queries/fechas-im
 import { verificarDentroVacacionesMedioAño } from "../../core/utils/verificators/verificarFueraVacacionesMedioAño";
 import { closePool } from "../../core/databases/connectors/postgres";
 import verificarFueraAñoEscolar from "../../core/utils/verificators/verificarDentroAñoEscolar";
-import { obtenerAuxiliaresParaTomarAsistencia } from "../../core/databases/queries/auxiliares/obtenerAuxiliares";
-import { actualizarArchivoDatosAsistenciaEnGoogleDrive } from "../../core/external/google/drive/actualizarArchivoDatosAsistencia";
+import { obtenerAuxiliaresParaTomarAsistencia } from "../../core/databases/queries/auxiliares/obtenerAuxiliaresParaTomarAsistencia";
+import { actualizarArchivoDatosAsistenciaDiariosRespaldoEnGoogleDrive } from "../../core/external/google/drive/actualizarArchivoDatosAsistencia";
+import { registrarAsistenciaAutoNullParaPersonalInactivo } from "../../core/databases/queries/personales-para-toma-asistencia/registrarAsistenciaAutoNullParaPersonalInactivo";
 
 async function generarDatosAsistenciaDiaria(): Promise<DatosAsistenciaHoyIE20935> {
   // Obtener fechas actuales
@@ -76,17 +77,40 @@ async function generarDatosAsistenciaDiaria(): Promise<DatosAsistenciaHoyIE20935
   return datosAsistencia;
 }
 
+// Modificación de main.ts para incluir registro de asistencia de personal inactivo
 async function main() {
   try {
     console.log("Iniciando generación de datos de asistencia diaria...");
 
+    // Generar datos de asistencia normal
     const datosAsistencia = await generarDatosAsistenciaDiaria();
 
     // Guardar datos en Vercel Blob
     await guardarDatosAsistenciaEnBlobs(datosAsistencia);
 
-    //Guardar datos en archivo de respaldo correspondiente en Google Drive y en la BD
-    await actualizarArchivoDatosAsistenciaEnGoogleDrive(datosAsistencia);
+    // Guardar datos en archivo de respaldo correspondiente en Google Drive y en la BD
+    await actualizarArchivoDatosAsistenciaDiariosRespaldoEnGoogleDrive(
+      datosAsistencia
+    );
+
+    // NUEVA FUNCIONALIDAD: Registrar asistencia automática como null para personal inactivo
+    console.log(
+      "Iniciando registro automático de asistencia para personal inactivo..."
+    );
+    const resultadoRegistroInactivos =
+      await registrarAsistenciaAutoNullParaPersonalInactivo();
+    console.log(
+      "Registro automático de asistencia para personal inactivo completado:"
+    );
+    console.log(
+      `- Total registros procesados: ${resultadoRegistroInactivos.totalRegistros}`
+    );
+    console.log(
+      `- Nuevos registros creados: ${resultadoRegistroInactivos.registrosCreados}`
+    );
+    console.log(
+      `- Registros existentes actualizados: ${resultadoRegistroInactivos.registrosActualizados}`
+    );
 
     // Imprimir en consola para verificación
     console.log(JSON.stringify(datosAsistencia, null, 2));

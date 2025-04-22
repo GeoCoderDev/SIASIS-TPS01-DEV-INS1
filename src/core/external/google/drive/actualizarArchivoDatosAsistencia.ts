@@ -18,7 +18,7 @@ import { uploadJsonToDrive } from "./uploadJsonToDrive";
  * @param folderPath Ruta de carpetas en Google Drive donde se almacenará el archivo
  * @returns Información del nuevo archivo creado
  */
-export async function actualizarArchivoDatosAsistenciaEnGoogleDrive(
+export async function actualizarArchivoDatosAsistenciaDiariosRespaldoEnGoogleDrive(
   jsonData: any,
   folderPath: string = "Archivos de Respaldo"
 ) {
@@ -46,7 +46,7 @@ export async function actualizarArchivoDatosAsistenciaEnGoogleDrive(
       folderPath,
       NOMBRE_ARCHIVO_CON_DATOS_ASISTENCIA_DIARIOS
     );
-    
+
     // 4. Guardar ID del archivo subido en Redis
     await redisClient.set(
       NOMBRE_ARCHIVO_CON_DATOS_ASISTENCIA_DIARIOS,

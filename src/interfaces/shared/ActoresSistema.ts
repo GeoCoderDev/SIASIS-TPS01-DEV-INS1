@@ -1,6 +1,5 @@
 
 
-
 export enum ActoresSistema {
   Directivo = "D",
   ProfesorPrimaria = "PP",
