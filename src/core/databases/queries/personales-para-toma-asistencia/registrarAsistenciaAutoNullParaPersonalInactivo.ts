@@ -1,5 +1,3 @@
-// registrarAsistenciaAutoNullParaPersonalInactivo.ts
-
 import { Meses } from "../../../../interfaces/shared/Meses";
 import { obtenerFechasActuales } from "../../../utils/dates/obtenerFechasActuales";
 import { query } from "../../connectors/postgres";

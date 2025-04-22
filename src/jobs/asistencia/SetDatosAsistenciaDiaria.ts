@@ -78,6 +78,7 @@ async function generarDatosAsistenciaDiaria(): Promise<DatosAsistenciaHoyIE20935
 }
 
 // Modificación de main.ts para incluir registro de asistencia de personal inactivo
+
 async function main() {
   try {
     console.log("Iniciando generación de datos de asistencia diaria...");
@@ -97,20 +98,28 @@ async function main() {
     console.log(
       "Iniciando registro automático de asistencia para personal inactivo..."
     );
-    const resultadoRegistroInactivos =
-      await registrarAsistenciaAutoNullParaPersonalInactivo();
-    console.log(
-      "Registro automático de asistencia para personal inactivo completado:"
-    );
-    console.log(
-      `- Total registros procesados: ${resultadoRegistroInactivos.totalRegistros}`
-    );
-    console.log(
-      `- Nuevos registros creados: ${resultadoRegistroInactivos.registrosCreados}`
-    );
-    console.log(
-      `- Registros existentes actualizados: ${resultadoRegistroInactivos.registrosActualizados}`
-    );
+    try {
+      const resultadoRegistroInactivos =
+        await registrarAsistenciaAutoNullParaPersonalInactivo();
+      console.log(
+        "Registro automático de asistencia para personal inactivo completado:"
+      );
+      console.log(
+        `- Total registros procesados: ${resultadoRegistroInactivos.totalRegistros}`
+      );
+      console.log(
+        `- Nuevos registros creados: ${resultadoRegistroInactivos.registrosCreados}`
+      );
+      console.log(
+        `- Registros existentes actualizados: ${resultadoRegistroInactivos.registrosActualizados}`
+      );
+    } catch (inactiveError) {
+      // No interrumpimos el proceso principal por un error en este bloque try catch
+      console.error(
+        "Error al procesar asistencia automática para personal inactivo, pero continuando con el resto del proceso:",
+        inactiveError
+      );
+    }
 
     // Imprimir en consola para verificación
     console.log(JSON.stringify(datosAsistencia, null, 2));
