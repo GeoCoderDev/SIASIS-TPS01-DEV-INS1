@@ -141,16 +141,39 @@ export async function obtenerPersonalInactivoParaRegistroAutomatico(): Promise<
 async function verificarTablasExistentes(tablas: string[]): Promise<string[]> {
   const tablasExistentes: string[] = [];
 
+  // Convertimos los nombres a la forma correcta según tus capturas:
+  // - Con "T_" al inicio si aún no lo tienen
+  // - Con cada palabra capitalizada correctamente
+  const tablasFormateadas = tablas.map((t) => {
+    // Si no comienza con T_ o t_, agregarlo
+    const withPrefix = t.startsWith("T_") || t.startsWith("t_") ? t : `T_${t}`;
+
+    // Convertir a formato PostgreSQL con primera letra de cada palabra en mayúscula
+    return withPrefix
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join("_");
+  });
+
   const sql = `
     SELECT table_name
     FROM information_schema.tables
     WHERE table_schema = 'public'
-    AND table_name = ANY($1)
+    AND (table_name = ANY($1) OR LOWER(table_name) = ANY($2))
   `;
 
   try {
-    const result = await query(sql, [tablas]);
+    // Verificamos con los nombres formateados y también con versiones en minúsculas
+    const tablasMinusculas = tablasFormateadas.map((t) => t.toLowerCase());
+    const result = await query(sql, [tablasFormateadas, tablasMinusculas]);
+
+    console.log(
+      "Tablas encontradas en la base de datos:",
+      result.rows.map((r: any) => r.table_name)
+    );
+
     result.rows.forEach((row: any) => {
+      // Guardamos el nombre exacto como aparece en la base de datos
       tablasExistentes.push(row.table_name);
     });
   } catch (error) {
