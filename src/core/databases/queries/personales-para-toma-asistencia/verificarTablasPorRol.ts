@@ -18,9 +18,7 @@ export async function verificarTablasPorRol(): Promise<Map<string, boolean>> {
     SELECT table_name 
     FROM information_schema.tables 
     WHERE table_schema = 'public'
-    AND table_name IN (${tablasNecesarias
-      .map((t) => `'${t.toLowerCase()}'`)
-      .join(", ")})
+    AND table_name IN (${tablasNecesarias.join(", ")})
   `;
 
   try {
