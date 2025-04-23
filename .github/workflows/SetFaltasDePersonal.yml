@@ -1,16 +1,11 @@
-name: Ejecutar Script de Datos para toma de Asistencia Diaria
+name: Ejecutar Script de registro de faltas de Personal Diarias
 
 on:
   schedule:
-    # Ejecutar a las 4:00 AM hora de Perú (UTC-5) de lunes a viernes /Se retrocedio una hora, debido a posibles retrasos que podrian suceder en la ejecución
-    # En GitHub Actions se usa UTC, por lo que 5:00 AM en Perú es 10:00 AM UTC
+    # Ejecutar a las 7:30 PM hora de Perú (UTC-5) de lunes a viernes
+    # En GitHub Actions se usa UTC, por lo que 7:30 PM en Perú es 12:30 AM (00:30) UTC del día siguiente
     # Solo en meses de marzo (3) a diciembre (12)
-    - cron: "0 9 * 3-12 1-5"
-
-  # # Añadido: Trigger para ejecutar en push a master
-  push:
-    branches:
-      - master
+    - cron: "30 0 * 3-12 2-6"
 
   # Permite la ejecución manual para pruebas
   workflow_dispatch:
@@ -38,7 +33,7 @@ jobs:
       - name: Ejecutar script con ts-node
         run: |
           echo "Ejecutando script..."
-          ts-node ./src/jobs/asistencia/SetDatosAsistenciaDiaria.ts
+          ts-node ./src/jobs/asistencia/SetFaltasDePersonal.ts
         env:
           RDP02_INS1_DATABASE_URL: ${{ secrets.RDP02_INS1_DATABASE_URL }}
           VERCEL_BLOB_INS1_READ_WRITE_TOKEN: ${{ secrets.VERCEL_BLOB_INS1_READ_WRITE_TOKEN }}
