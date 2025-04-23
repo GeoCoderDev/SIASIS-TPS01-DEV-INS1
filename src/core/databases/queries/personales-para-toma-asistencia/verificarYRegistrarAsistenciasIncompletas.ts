@@ -43,7 +43,6 @@ export async function verificarYRegistrarAsistenciasIncompletas(
       try {
         const tieneEntrada = await verificarExistenciaRegistroDiario(
           tablaEntradaReal,
-          persona.campoId,
           persona.campoDNI,
           persona.dni,
           mes,
@@ -82,7 +81,6 @@ export async function verificarYRegistrarAsistenciasIncompletas(
       try {
         const tieneSalida = await verificarExistenciaRegistroDiario(
           tablaSalidaReal,
-          persona.campoId,
           persona.campoDNI,
           persona.dni,
           mes,
