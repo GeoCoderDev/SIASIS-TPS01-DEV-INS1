@@ -1,6 +1,7 @@
 import { query } from "../../connectors/postgres";
 
-export async function verificarTablasPorRol(): Promise<Map<string, boolean>> {
+async function verificarTablasPorRol(): Promise<Map<string, boolean>> {
+  // Lista de todas las posibles tablas de control de asistencia
   const tablasNecesarias = [
     "T_Control_Entrada_Mensual_Auxiliar",
     "T_Control_Salida_Mensual_Auxiliar",
@@ -12,28 +13,56 @@ export async function verificarTablasPorRol(): Promise<Map<string, boolean>> {
     "T_Control_Salida_Mensual_Personal_Administrativo",
   ];
 
+  // Verificar en información del esquema qué tablas existen
   const sql = `
-    SELECT table_name
-    FROM information_schema.tables
+    SELECT table_name 
+    FROM information_schema.tables 
     WHERE table_schema = 'public'
-    AND table_name = ANY($1)
+    AND table_name IN (${tablasNecesarias
+      .map((t) => `'${t.toLowerCase()}'`)
+      .join(", ")})
   `;
 
-  const result = await query(sql, [
-    tablasNecesarias.map((t) => t.toLowerCase()),
-  ]);
+  try {
+    const result = await query(sql);
 
-  const tablasExistentes = new Map<string, boolean>();
+    // Inicializar map con todas las tablas como inexistentes
+    const tablasExistentes = new Map<string, boolean>();
+    tablasNecesarias.forEach((tabla) => {
+      tablasExistentes.set(tabla, false);
+    });
 
-  // Inicializar todas como no existentes
-  tablasNecesarias.forEach((tabla) => {
-    tablasExistentes.set(tabla.toLowerCase(), false);
-  });
+    // Marcar las tablas que realmente existen
+    result.rows.forEach((row: any) => {
+      // Buscar el nombre exacto en la lista original
+      const nombreOriginal = tablasNecesarias.find(
+        (t) => t.toLowerCase() === row.table_name.toLowerCase()
+      );
 
-  // Marcar las que existen
-  result.rows.forEach((row: any) => {
-    tablasExistentes.set(row.table_name, true);
-  });
+      if (nombreOriginal) {
+        tablasExistentes.set(nombreOriginal, true);
+      }
+    });
 
-  return tablasExistentes;
+    // Hacer log de las tablas existentes para depuración
+    const tablasEncontradas = Array.from(tablasExistentes.entries())
+      .filter(([_, existe]) => existe)
+      .map(([nombre]) => nombre);
+
+    console.log(
+      `Tablas de control de asistencia encontradas (${
+        tablasEncontradas.length
+      }): ${tablasEncontradas.join(", ") || "Ninguna"}`
+    );
+
+    return tablasExistentes;
+  } catch (error) {
+    console.error("Error al verificar tablas de control de asistencia:", error);
+    // En caso de error, retornar todas como no existentes
+    const tablasExistentes = new Map<string, boolean>();
+    tablasNecesarias.forEach((tabla) => {
+      tablasExistentes.set(tabla, false);
+    });
+    return tablasExistentes;
+  }
 }

@@ -1,21 +1,21 @@
-import { obtenerFechasActuales } from "../../core/utils/dates/obtenerFechasActuales";
 import { closePool } from "../../core/databases/connectors/postgres";
 import {
   obtenerPersonalActivoDesdeJSON,
   obtenerUltimoArchivoAsistencia,
 } from "../../core/databases/queries/archivos-respaldo/obtenerDatosArchivoAsistenciaDiarios";
-import { descargarArchivoDatosAsistenciaDesdeGoogleDrive } from "../../core/external/google/drive/descargarArchivoDatosAsistencia";
-import { verificarYRegistrarAsistenciasIncompletas } from "../../core/databases/queries/personales-para-toma-asistencia/verificarYRegistrarAsistenciasIncompletas";
 import { bloquearRoles } from "../../core/databases/queries/bloqueo-roles/bloquearRoles";
 import { desbloquearRoles } from "../../core/databases/queries/bloqueo-roles/desbloquearRoles";
+import { verificarYRegistrarAsistenciasIncompletas } from "../../core/databases/queries/personales-para-toma-asistencia/verificarYRegistrarAsistenciasIncompletas";
+import { descargarArchivoDatosAsistenciaDesdeGoogleDrive } from "../../core/external/google/drive/descargarArchivoDatosAsistencia";
+import { obtenerFechasActuales } from "../../core/utils/dates/obtenerFechasActuales";
 import { RolesSistema } from "../../interfaces/shared/RolesSistema";
 
 async function main() {
   try {
     console.log("Iniciando verificación de asistencias incompletas...");
 
-    // Bloquear todos los roles al inicio
-    await bloquearRoles([
+    // Definir todos los roles que vamos a bloquear
+    const todosLosRoles = [
       RolesSistema.Directivo,
       RolesSistema.ProfesorPrimaria,
       RolesSistema.Auxiliar,
@@ -23,7 +23,17 @@ async function main() {
       RolesSistema.Tutor,
       RolesSistema.Responsable,
       RolesSistema.PersonalAdministrativo,
-    ]);
+    ];
+
+    // Bloquear todos los roles al inicio
+    try {
+      await bloquearRoles(todosLosRoles);
+    } catch (blockError) {
+      console.warn(
+        "No se pudieron bloquear todos los roles, continuando de todos modos:",
+        blockError
+      );
+    }
 
     try {
       // Obtener fecha actual en Perú
@@ -64,32 +74,36 @@ async function main() {
 
       // Detallar personal sin registro de entrada
       console.log("\nPersonal sin registro de entrada:");
-      resultado.personalSinRegistroEntrada.forEach((persona) => {
-        console.log(
-          `- ${persona.nombreCompleto} (${persona.dni}) - ${persona.rol}`
-        );
-      });
+      if (resultado.personalSinRegistroEntrada.length === 0) {
+        console.log("Ninguno (o no se pudieron procesar por falta de tablas)");
+      } else {
+        resultado.personalSinRegistroEntrada.forEach((persona) => {
+          console.log(
+            `- ${persona.nombreCompleto} (${persona.dni}) - ${persona.rol}`
+          );
+        });
+      }
 
       // Detallar personal sin registro de salida
       console.log("\nPersonal sin registro de salida:");
-      resultado.personalSinRegistroSalida.forEach((persona) => {
-        console.log(
-          `- ${persona.nombreCompleto} (${persona.dni}) - ${persona.rol}`
-        );
-      });
+      if (resultado.personalSinRegistroSalida.length === 0) {
+        console.log("Ninguno (o no se pudieron procesar por falta de tablas)");
+      } else {
+        resultado.personalSinRegistroSalida.forEach((persona) => {
+          console.log(
+            `- ${persona.nombreCompleto} (${persona.dni}) - ${persona.rol}`
+          );
+        });
+      }
 
       console.log("\nProceso completado exitosamente.");
     } finally {
       // Desbloquear todos los roles sin importar lo que suceda
-      await desbloquearRoles([
-        RolesSistema.Directivo,
-        RolesSistema.ProfesorPrimaria,
-        RolesSistema.Auxiliar,
-        RolesSistema.ProfesorSecundaria,
-        RolesSistema.Tutor,
-        RolesSistema.Responsable,
-        RolesSistema.PersonalAdministrativo,
-      ]);
+      try {
+        await desbloquearRoles(todosLosRoles);
+      } catch (unlockError) {
+        console.warn("Error al desbloquear roles:", unlockError);
+      }
     }
   } catch (error) {
     console.error(
@@ -98,11 +112,14 @@ async function main() {
     );
     process.exit(1);
   } finally {
-    await closePool();
-    console.log("Conexiones cerradas. Finalizando proceso...");
+    try {
+      await closePool();
+      console.log("Conexiones cerradas. Finalizando proceso...");
+    } catch (poolError) {
+      console.error("Error al cerrar el pool de conexiones:", poolError);
+    }
     process.exit(0);
   }
 }
 
-main();
 main();
