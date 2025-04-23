@@ -1,6 +1,6 @@
 import { query } from "../../connectors/postgres";
 
-async function verificarTablasPorRol(): Promise<Map<string, boolean>> {
+export async function verificarTablasPorRol(): Promise<Map<string, boolean>> {
   // Lista de todas las posibles tablas de control de asistencia
   const tablasNecesarias = [
     "T_Control_Entrada_Mensual_Auxiliar",
