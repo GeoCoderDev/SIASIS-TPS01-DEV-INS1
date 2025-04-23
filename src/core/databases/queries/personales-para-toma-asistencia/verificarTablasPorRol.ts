@@ -18,6 +18,7 @@ export async function verificarTablasPorRol(): Promise<Map<string, boolean>> {
     SELECT table_name 
     FROM information_schema.tables 
     WHERE table_schema = 'public'
+    AND table_name IN (${tablasNecesarias.join(", ")})
   `;
 
   try {
@@ -29,19 +30,15 @@ export async function verificarTablasPorRol(): Promise<Map<string, boolean>> {
       tablasExistentes.set(tabla, false);
     });
 
-    // Convertir nombres de tablas a minúsculas para comparación
-    const tablasNecesariasLower = tablasNecesarias.map((t) => t.toLowerCase());
-
     // Marcar las tablas que realmente existen
     result.rows.forEach((row: any) => {
-      const tableNameLower = row.table_name.toLowerCase();
+      // Buscar el nombre exacto en la lista original
+      const nombreOriginal = tablasNecesarias.find(
+        (t) => t.toLowerCase() === row.table_name.toLowerCase()
+      );
 
-      // Buscar el índice en el array de nombres en minúsculas
-      const index = tablasNecesariasLower.indexOf(tableNameLower);
-
-      if (index >= 0) {
-        // Usar el nombre original para mantener mayúsculas/minúsculas
-        tablasExistentes.set(tablasNecesarias[index], true);
+      if (nombreOriginal) {
+        tablasExistentes.set(nombreOriginal, true);
       }
     });
 

@@ -39,7 +39,7 @@ export async function verificarYRegistrarAsistenciasIncompletas(
   // Verificar asistencias para cada persona
   for (const persona of personal) {
     // Verificar entradas
-    if (tablasExistentes.get(persona.tablaMensualEntrada.toLowerCase())) {
+    if (tablasExistentes.get(persona.tablaMensualEntrada)) {
       try {
         const tieneEntrada = await verificarExistenciaRegistroDiario(
           persona.tablaMensualEntrada,
