@@ -14,7 +14,6 @@ export interface PersonalActivo {
   horaEntradaEsperada?: string;
   horaSalidaEsperada?: string;
 }
-
 export async function verificarYRegistrarAsistenciasIncompletas(
   personal: PersonalActivo[],
   fechaLocalPeru: Date
@@ -39,10 +38,12 @@ export async function verificarYRegistrarAsistenciasIncompletas(
   // Verificar asistencias para cada persona
   for (const persona of personal) {
     // Verificar entradas
-    if (tablasExistentes.get(persona.tablaMensualEntrada)) {
+    const tablaEntradaReal = tablasExistentes.get(persona.tablaMensualEntrada);
+    if (tablaEntradaReal) {
       try {
         const tieneEntrada = await verificarExistenciaRegistroDiario(
-          persona.tablaMensualEntrada,
+          tablaEntradaReal,
+          persona.campoId,
           persona.campoDNI,
           persona.dni,
           mes,
@@ -53,7 +54,7 @@ export async function verificarYRegistrarAsistenciasIncompletas(
         if (!tieneEntrada) {
           // Registrar entrada con timestamp: null y desfaseSegundos: null
           await registrarAsistenciaConValoresNull(
-            persona.tablaMensualEntrada,
+            tablaEntradaReal,
             persona.campoDNI,
             persona.dni,
             mes,
@@ -71,15 +72,17 @@ export async function verificarYRegistrarAsistenciasIncompletas(
       }
     } else {
       console.warn(
-        `Tabla ${persona.tablaMensualEntrada} no existe, omitiendo verificación de entrada para ${persona.nombreCompleto}`
+        `Tabla ${persona.tablaMensualEntrada} no existe en la base de datos. Omitiendo registro de entrada para ${persona.nombreCompleto}`
       );
     }
 
     // Verificar salidas
-    if (tablasExistentes.get(persona.tablaMensualSalida.toLowerCase())) {
+    const tablaSalidaReal = tablasExistentes.get(persona.tablaMensualSalida);
+    if (tablaSalidaReal) {
       try {
         const tieneSalida = await verificarExistenciaRegistroDiario(
-          persona.tablaMensualSalida,
+          tablaSalidaReal,
+          persona.campoId,
           persona.campoDNI,
           persona.dni,
           mes,
@@ -90,7 +93,7 @@ export async function verificarYRegistrarAsistenciasIncompletas(
         if (!tieneSalida) {
           // Registrar salida con timestamp: null y desfaseSegundos: null
           await registrarAsistenciaConValoresNull(
-            persona.tablaMensualSalida,
+            tablaSalidaReal,
             persona.campoDNI,
             persona.dni,
             mes,
@@ -108,7 +111,7 @@ export async function verificarYRegistrarAsistenciasIncompletas(
       }
     } else {
       console.warn(
-        `Tabla ${persona.tablaMensualSalida} no existe, omitiendo verificación de salida para ${persona.nombreCompleto}`
+        `Tabla ${persona.tablaMensualSalida} no existe en la base de datos. Omitiendo registro de salida para ${persona.nombreCompleto}`
       );
     }
   }

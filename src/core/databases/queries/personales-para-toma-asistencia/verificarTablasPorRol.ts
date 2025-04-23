@@ -1,6 +1,6 @@
 import { query } from "../../connectors/postgres";
 
-export async function verificarTablasPorRol(): Promise<Map<string, boolean>> {
+export async function verificarTablasPorRol(): Promise<Map<string, string>> {
   // Lista de todas las posibles tablas de control de asistencia
   const tablasNecesarias = [
     "T_Control_Entrada_Mensual_Auxiliar",
@@ -13,54 +13,55 @@ export async function verificarTablasPorRol(): Promise<Map<string, boolean>> {
     "T_Control_Salida_Mensual_Personal_Administrativo",
   ];
 
-  // Verificar en información del esquema qué tablas existen
+  // Convertir a formato para PostgreSQL
+  const tablasFormateadas = tablasNecesarias.map((t) => {
+    return t
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join("_");
+  });
+
+  // Convertir a minúsculas para comparación
+  const tablasMinusculas = tablasFormateadas.map((t) => t.toLowerCase());
+
+  // Verificar qué tablas existen
   const sql = `
-    SELECT table_name 
-    FROM information_schema.tables 
+    SELECT table_name
+    FROM information_schema.tables
     WHERE table_schema = 'public'
-    AND table_name IN (${tablasNecesarias.join(", ")})
+    AND (table_name = ANY($1) OR LOWER(table_name) = ANY($2))
   `;
 
   try {
-    const result = await query(sql);
+    const result = await query(sql, [tablasFormateadas, tablasMinusculas]);
 
-    // Inicializar map con todas las tablas como inexistentes
-    const tablasExistentes = new Map<string, boolean>();
-    tablasNecesarias.forEach((tabla) => {
-      tablasExistentes.set(tabla, false);
-    });
+    // Crear un mapeo entre los nombres originales y los nombres reales
+    const tablasExistentes = new Map<string, string>();
 
-    // Marcar las tablas que realmente existen
-    result.rows.forEach((row: any) => {
-      // Buscar el nombre exacto en la lista original
-      const nombreOriginal = tablasNecesarias.find(
-        (t) => t.toLowerCase() === row.table_name.toLowerCase()
+    console.log(
+      "Tablas encontradas en la base de datos:",
+      result.rows.map((r: any) => r.table_name)
+    );
+
+    // Para cada nombre original, buscar su correspondiente en el resultado
+    tablasNecesarias.forEach((nombreOriginal, index) => {
+      const tablaFormateada = tablasFormateadas[index];
+      const tablaMinuscula = tablasMinusculas[index];
+
+      const encontrada = result.rows.find(
+        (row: any) => row.table_name.toLowerCase() === tablaMinuscula
       );
 
-      if (nombreOriginal) {
-        tablasExistentes.set(nombreOriginal, true);
+      if (encontrada) {
+        tablasExistentes.set(nombreOriginal, encontrada.table_name);
       }
     });
 
-    // Hacer log de las tablas existentes para depuración
-    const tablasEncontradas = Array.from(tablasExistentes.entries())
-      .filter(([_, existe]) => existe)
-      .map(([nombre]) => nombre);
-
-    console.log(
-      `Tablas de control de asistencia encontradas (${
-        tablasEncontradas.length
-      }): ${tablasEncontradas.join(", ") || "Ninguna"}`
-    );
+    console.log("Mapeo de tablas:", Object.fromEntries(tablasExistentes));
 
     return tablasExistentes;
   } catch (error) {
     console.error("Error al verificar tablas de control de asistencia:", error);
-    // En caso de error, retornar todas como no existentes
-    const tablasExistentes = new Map<string, boolean>();
-    tablasNecesarias.forEach((tabla) => {
-      tablasExistentes.set(tabla, false);
-    });
-    return tablasExistentes;
+    return new Map();
   }
 }
