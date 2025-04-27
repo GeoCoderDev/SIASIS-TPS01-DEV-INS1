@@ -332,7 +332,22 @@ const defaultQuery = async (
   params?: any[],
   useCache: boolean = false
 ) => {
-  return query(text, params, { useCache });
+  // Detectar si es una operación de escritura
+  const isWriteOperation =
+    text.trim().toUpperCase().startsWith("INSERT") ||
+    text.trim().toUpperCase().startsWith("UPDATE") ||
+    text.trim().toUpperCase().startsWith("DELETE") ||
+    text.trim().toUpperCase().includes("CREATE TABLE") ||
+    text.trim().toUpperCase().includes("ALTER TABLE") ||
+    text.trim().toUpperCase().includes("DROP TABLE");
+
+  // Para operaciones de escritura, ejecutar en todas las instancias
+  if (isWriteOperation) {
+    return query(text, params, { useCache, executeOnAllInstances: true });
+  } else {
+    // Para operaciones de lectura, comportamiento original
+    return query(text, params, { useCache });
+  }
 };
 
 export default {
