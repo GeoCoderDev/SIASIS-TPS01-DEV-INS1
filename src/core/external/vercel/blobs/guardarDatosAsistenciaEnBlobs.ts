@@ -2,6 +2,8 @@
 import { put } from "@vercel/blob";
 import { DatosAsistenciaHoyIE20935 } from "../../../../interfaces/shared/Asistencia/DatosAsistenciaHoyIE20935";
 import { NOMBRE_ARCHIVO_CON_DATOS_ASISTENCIA_DIARIOS } from "../../../../constants/NOMBRE_ARCHIVOS_SISTEMA";
+import { ENTORNO } from "../../../../constants/ENTORNO";
+import { Entorno } from "../../../../interfaces/shared/Entornos";
 
 export async function guardarDatosAsistenciaEnBlobs(
   datos: DatosAsistenciaHoyIE20935
@@ -11,30 +13,37 @@ export async function guardarDatosAsistenciaEnBlobs(
 
   try {
     // Configuración para cada blob
-    const blobConfigs = [
-      {
-        nombre: "INS1",
-        tokenEnv: "VERCEL_BLOB_INS1_READ_WRITE_TOKEN",
-      },
-      // POR EL MOMENTO SOLO SE HABILITAN 1 BLOB, EL RESTO SE DEJARÁN COMENTADOS
-      // ,
-      // {
-      //   nombre: "INS2",
-      //   tokenEnv: "VERCEL_BLOB_INS2_READ_WRITE_TOKEN",
-      // },
-      // {
-      //   nombre: "INS3",
-      //   tokenEnv: "VERCEL_BLOB_INS3_READ_WRITE_TOKEN",
-      // },
-      // {
-      //   nombre: "INS4",
-      //   tokenEnv: "VERCEL_BLOB_INS4_READ_WRITE_TOKEN",
-      // },
-      // {
-      //   nombre: "INS5",
-      //   tokenEnv: "VERCEL_BLOB_INS5_READ_WRITE_TOKEN",
-      // },
-    ];
+    const blobConfigs =
+      ENTORNO !== Entorno.PRODUCCION
+        ? [
+            {
+              nombre: "INS1",
+              tokenEnv: "RDP04_VERCEL_BLOB_INS1_READ_WRITE_TOKEN",
+            },
+            // Fuera de produccion solo tendremos un blob
+          ]
+        : [
+            {
+              nombre: "INS1",
+              tokenEnv: "RDP04_VERCEL_BLOB_INS1_READ_WRITE_TOKEN",
+            },
+            {
+              nombre: "INS2",
+              tokenEnv: "RDP04_VERCEL_BLOB_INS2_READ_WRITE_TOKEN",
+            },
+            {
+              nombre: "INS3",
+              tokenEnv: "RDP04_VERCEL_BLOB_INS3_READ_WRITE_TOKEN",
+            },
+            {
+              nombre: "INS4",
+              tokenEnv: "RDP04_VERCEL_BLOB_INS4_READ_WRITE_TOKEN",
+            },
+            {
+              nombre: "INS5",
+              tokenEnv: "RDP04_VERCEL_BLOB_INS5_READ_WRITE_TOKEN",
+            },
+          ];
 
     // Contenido JSON que se guardará
     const contenidoJSON = JSON.stringify(datos);

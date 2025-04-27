@@ -3,7 +3,7 @@ import { NOMBRE_ARCHIVO_CON_DATOS_ASISTENCIA_DIARIOS } from "../../../../constan
 import {
   buscarArchivoDatosAsistenciaDiariosEnBD,
   registrarArchivoDatosAsistenciaDiariosEnBD,
-} from "../../../databases/queries/asistencia-diaria/operacionesAsistenciaDiaria";
+} from "../../../databases/queries/RDP02/asistencia-diaria/operacionesAsistenciaDiaria";
 import { deleteFileFromDrive } from "./deleteFileFromDrive";
 import { uploadJsonToDrive } from "./uploadJsonToDrive";
 
@@ -47,8 +47,8 @@ export async function actualizarArchivoDatosAsistenciaDiariosRespaldoEnGoogleDri
       NOMBRE_ARCHIVO_CON_DATOS_ASISTENCIA_DIARIOS
     );
 
-    // 4. Guardar ID del archivo subido en Redis
-    await redisClient.set(
+    // 4. Guardar archivo en todas las instancias de Redis
+    await redisClient().set(
       NOMBRE_ARCHIVO_CON_DATOS_ASISTENCIA_DIARIOS,
       nuevoArchivo.id
     );

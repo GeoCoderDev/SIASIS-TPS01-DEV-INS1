@@ -2,10 +2,10 @@ import { closePool } from "../../core/databases/connectors/postgres";
 import {
   obtenerPersonalActivoDesdeJSON,
   obtenerUltimoArchivoAsistencia,
-} from "../../core/databases/queries/archivos-respaldo/obtenerDatosArchivoAsistenciaDiarios";
-import { bloquearRoles } from "../../core/databases/queries/bloqueo-roles/bloquearRoles";
-import { desbloquearRoles } from "../../core/databases/queries/bloqueo-roles/desbloquearRoles";
-import { verificarYRegistrarAsistenciasIncompletas } from "../../core/databases/queries/personales-para-toma-asistencia/verificarYRegistrarAsistenciasIncompletas";
+} from "../../core/databases/queries/RDP02/archivos-respaldo/obtenerDatosArchivoAsistenciaDiarios";
+import { bloquearRoles } from "../../core/databases/queries/RDP02/bloqueo-roles/bloquearRoles";
+import { desbloquearRoles } from "../../core/databases/queries/RDP02/bloqueo-roles/desbloquearRoles";
+import { verificarYRegistrarAsistenciasIncompletas } from "../../core/databases/queries/RDP02/personales-para-toma-asistencia/verificarYRegistrarAsistenciasIncompletas";
 import { descargarArchivoDatosAsistenciaDesdeGoogleDrive } from "../../core/external/google/drive/descargarArchivoDatosAsistencia";
 import { obtenerFechasActuales } from "../../core/utils/dates/obtenerFechasActuales";
 import { RolesSistema } from "../../interfaces/shared/RolesSistema";

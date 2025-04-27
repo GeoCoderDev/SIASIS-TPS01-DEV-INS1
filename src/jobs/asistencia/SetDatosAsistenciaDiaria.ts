@@ -1,22 +1,26 @@
 import { DatosAsistenciaHoyIE20935 } from "../../interfaces/shared/Asistencia/DatosAsistenciaHoyIE20935";
 
-import { verificarDiaEvento } from "../../core/databases/queries/eventos/verificarDiaEvento";
+import { verificarDiaEvento } from "../../core/databases/queries/RDP02/eventos/verificarDiaEvento";
 
-import { obtenerComunicadosActivos } from "../../core/databases/queries/comunicados/obtenerComunicadosActivos";
-import { obtenerPersonalAdministrativoParaTomarAsistencia } from "../../core/databases/queries/personal-administrativo/obtenerPersonalAdministrativoParaTomarAsistencia";
-import { obtenerProfesoresPrimariaParaTomarAsistencia } from "../../core/databases/queries/profesores-primaria/obtenerProfesoresPrimariaParaTomarAsistencia";
-import { obtenerProfesoresSecundariaParaTomarAsistencia } from "../../core/databases/queries/profesores-tutores-secundaria/obtenerProfesoresSecundariaParaTomarAsistencia";
-import { obtenerHorariosGenerales } from "../../core/databases/queries/horarios/obtenerHorariosGenerales";
-import { obtenerHorariosEscolares } from "../../core/databases/queries/horarios/obtenerHorariosEscolares";
+import { obtenerComunicadosActivos } from "../../core/databases/queries/RDP02/comunicados/obtenerComunicadosActivos";
+import { obtenerPersonalAdministrativoParaTomarAsistencia } from "../../core/databases/queries/RDP02/personal-administrativo/obtenerPersonalAdministrativoParaTomarAsistencia";
+import { obtenerProfesoresPrimariaParaTomarAsistencia } from "../../core/databases/queries/RDP02/profesores-primaria/obtenerProfesoresPrimariaParaTomarAsistencia";
+import { obtenerProfesoresSecundariaParaTomarAsistencia } from "../../core/databases/queries/RDP02/profesores-tutores-secundaria/obtenerProfesoresSecundariaParaTomarAsistencia";
+import { obtenerHorariosGenerales } from "../../core/databases/queries/RDP02/horarios/obtenerHorariosGenerales";
+import { obtenerHorariosEscolares } from "../../core/databases/queries/RDP02/horarios/obtenerHorariosEscolares";
 import { guardarDatosAsistenciaEnBlobs } from "../../core/external/vercel/blobs/guardarDatosAsistenciaEnBlobs";
 import { obtenerFechasActuales } from "../../core/utils/dates/obtenerFechasActuales";
-import { obtenerFechasAñoEscolar } from "../../core/databases/queries/fechas-importantes/obtenerFechasAñoEscolar";
-import { verificarDentroVacacionesMedioAño } from "../../core/utils/verificators/verificarFueraVacacionesMedioAño";
+import { obtenerFechasAñoEscolar } from "../../core/databases/queries/RDP02/fechas-importantes/obtenerFechasAñoEscolar";
+
+import { obtenerSemanaDeGestion } from "../../core/databases/queries/RDP02/fechas-importantes/obtenerSemanaDeGestion";
+import { verificarDentroSemanaGestion } from "../../core/utils/verificators/verificarDentroSemanaGestion";
+
 import { closePool } from "../../core/databases/connectors/postgres";
 import verificarFueraAñoEscolar from "../../core/utils/verificators/verificarDentroAñoEscolar";
-import { obtenerAuxiliaresParaTomarAsistencia } from "../../core/databases/queries/auxiliares/obtenerAuxiliaresParaTomarAsistencia";
+import { obtenerAuxiliaresParaTomarAsistencia } from "../../core/databases/queries/RDP02/auxiliares/obtenerAuxiliaresParaTomarAsistencia";
 import { actualizarArchivoDatosAsistenciaDiariosRespaldoEnGoogleDrive } from "../../core/external/google/drive/actualizarArchivoDatosAsistencia";
-import { registrarAsistenciaAutoNullParaPersonalInactivo } from "../../core/databases/queries/personales-para-toma-asistencia/registrarAsistenciaAutoNullParaPersonalInactivo";
+import { registrarAsistenciaAutoNullParaPersonalInactivo } from "../../core/databases/queries/RDP02/personales-para-toma-asistencia/registrarAsistenciaAutoNullParaPersonalInactivo";
+import { obtenerVacacionesInterescolares } from "../../core/databases/queries/RDP02/vacaciones-interescolares/obtenerVacacionesInterescolares";
 
 async function generarDatosAsistenciaDiaria(): Promise<DatosAsistenciaHoyIE20935> {
   // Obtener fechas actuales
@@ -28,18 +32,23 @@ async function generarDatosAsistenciaDiaria(): Promise<DatosAsistenciaHoyIE20935
   // Obtener fechas del año escolar
   const fechasAñoEscolar = await obtenerFechasAñoEscolar();
 
-  // Verificar si estamos dentro del año escolar y fuera de vacaciones
+  // Verificar si estamos dentro del año escolar
   const fueraAñoEscolar = verificarFueraAñoEscolar(
     fechaLocalPeru,
-    fechasAñoEscolar.Fecha_Inicio_Año_Escolar,
-    fechasAñoEscolar.Fecha_Fin_Año_Escolar
+    fechasAñoEscolar.Inicio_Año_Escolar,
+    fechasAñoEscolar.Fin_Año_Escolar
   );
 
-  const dentroVacacionesMedioAño = verificarDentroVacacionesMedioAño(
+  // Obtener vacaciones interescolares
+  const vacacionesInterescolares = await obtenerVacacionesInterescolares();
+
+  // Obtener y verificar semana de gestión
+  const semanaGestion = await obtenerSemanaDeGestion();
+  const dentroSemanaGestion = verificarDentroSemanaGestion(
     fechaLocalPeru,
-    fechasAñoEscolar.Fecha_Inicio_Vacaciones_Medio_Año,
-    fechasAñoEscolar.Fecha_Fin_Vacaciones_Medio_Año
+    semanaGestion
   );
+
   // Obtener comunicados activos para hoy
   const comunicados = await obtenerComunicadosActivos(fechaLocalPeru);
 
@@ -64,7 +73,8 @@ async function generarDatosAsistenciaDiaria(): Promise<DatosAsistenciaHoyIE20935
     FechaUTC: fechaUTC,
     FechaLocalPeru: fechaLocalPeru,
     FueraAñoEscolar: fueraAñoEscolar,
-    DentroVacionesMedioAño: dentroVacacionesMedioAño,
+    Vacaciones_Interescolares: vacacionesInterescolares,
+    Semana_De_Gestion: dentroSemanaGestion,
     ComunicadosParaMostrarHoy: comunicados,
     ListaDeAuxiliares: auxiliares,
     ListaDePersonalesAdministrativos: personalAdministrativo,

@@ -6,30 +6,175 @@ import {
   PG_IDLE_TIMEOUT,
   PG_MAX_CONNECTIONS,
 } from "../../../constants/NEON_POSTGRES_CONFIG";
+import { RDP02 } from "../../../interfaces/shared/RDP02Instancias";
+import { RolesSistema } from "../../../interfaces/shared/RolesSistema";
+import {
+  AUXILIAR_INSTANCES,
+  DIRECTIVO_INSTANCES,
+  PERSONAL_ADMIN_INSTANCES,
+  PROFESOR_PRIMARIA_INSTANCES,
+  PROFESOR_SECUNDARIA_INSTANCES,
+  RDP02_INSTANCES_DATABASE_URL_MAP,
+  TUTOR_INSTANCES,
+} from "../../../constants/RDP02_INSTANCES_DISTRIBUTION";
 
 dotenv.config();
 
-// Crear un pool de conexiones configurado para Neon (plan gratuito)
-const pool = new Pool({
-  connectionString: process.env.RDP02_INS1_DATABASE_URL,
-  max: parseInt(PG_MAX_CONNECTIONS || "3", 10), // Muy conservador para el plan gratuito
-  idleTimeoutMillis: parseInt(PG_IDLE_TIMEOUT || "10000", 10),
-  connectionTimeoutMillis: parseInt(PG_CONNECTION_TIMEOUT || "5000", 10),
-  // Parámetros específicos para mejorar rendimiento en Neon
-  ssl: true,
-});
+// Agrupar roles por afinidad de acceso
+type RolesGroup = {
+  name: string;
+  roles: RolesSistema[];
+  instances: RDP02[];
+};
+
+const rolesGroups: RolesGroup[] = [
+  {
+    name: "Administrativos",
+    roles: [
+      RolesSistema.Directivo,
+      RolesSistema.Auxiliar,
+      RolesSistema.PersonalAdministrativo,
+      RolesSistema.Responsable, // Responsables usan la misma BD que administrativos
+    ],
+    instances: [
+      ...new Set([
+        ...DIRECTIVO_INSTANCES,
+        ...AUXILIAR_INSTANCES,
+        ...PERSONAL_ADMIN_INSTANCES,
+      ]),
+    ],
+  },
+  {
+    name: "Secundaria",
+    roles: [RolesSistema.ProfesorSecundaria, RolesSistema.Tutor],
+    instances: [
+      ...new Set([...PROFESOR_SECUNDARIA_INSTANCES, ...TUTOR_INSTANCES]),
+    ],
+  },
+  {
+    name: "Primaria",
+    roles: [RolesSistema.ProfesorPrimaria],
+    instances: PROFESOR_PRIMARIA_INSTANCES,
+  },
+];
+
+// Estructura para almacenar las instancias de pools de PostgreSQL
+type PostgresInstances = {
+  [key: string]: Pool[];
+};
+
+// Inicialización de las instancias de PostgreSQL basadas en la configuración
+const postgresInstances: PostgresInstances = {};
+
+// Inicializar los pools de conexión para cada grupo y sus instancias
+for (const group of rolesGroups) {
+  postgresInstances[group.name] = [];
+
+  for (const instanceId of group.instances) {
+    const connectionString = RDP02_INSTANCES_DATABASE_URL_MAP.get(instanceId);
+
+    if (connectionString) {
+      postgresInstances[group.name].push(
+        new Pool({
+          connectionString,
+          max: parseInt(PG_MAX_CONNECTIONS || "3", 10),
+          idleTimeoutMillis: parseInt(PG_IDLE_TIMEOUT || "10000", 10),
+          connectionTimeoutMillis: parseInt(
+            PG_CONNECTION_TIMEOUT || "5000",
+            10
+          ),
+          ssl: true,
+        })
+      );
+    } else {
+      console.warn(
+        `No se encontró URL de conexión para la instancia ${instanceId}`
+      );
+    }
+  }
+}
 
 // Cache simple para reducir consultas repetitivas
-const queryCache = new Map();
+// Ahora el cache está separado por grupo
+const queryCaches: { [key: string]: Map<string, any> } = {};
+
+// Inicializar los caches para cada grupo
+for (const group of rolesGroups) {
+  queryCaches[group.name] = new Map();
+}
+
 const CACHE_TTL = 60000; // 1 minuto en milisegundos
+
+// Función para determinar el grupo de un rol
+function getRoleGroup(role?: RolesSistema): string {
+  if (!role) return "Administrativos"; // Por defecto, si no se especifica rol
+
+  for (const group of rolesGroups) {
+    if (group.roles.includes(role)) {
+      return group.name;
+    }
+  }
+
+  return "Administrativos"; // Fallback por si acaso
+}
+
+// Función para obtener una instancia aleatoria de PostgreSQL por grupo
+function getRandomPool(group: string): Pool {
+  const instances = postgresInstances[group];
+  if (!instances || instances.length === 0) {
+    throw new Error(`No hay instancias disponibles para el grupo: ${group}`);
+  }
+
+  const randomIndex = Math.floor(Math.random() * instances.length);
+  return instances[randomIndex];
+}
+
+// Función para agregar una nueva instancia de PostgreSQL
+export function addPostgresInstance(
+  group: string,
+  connectionString: string
+): void {
+  if (!postgresInstances[group]) {
+    postgresInstances[group] = [];
+  }
+
+  postgresInstances[group].push(
+    new Pool({
+      connectionString,
+      max: parseInt(PG_MAX_CONNECTIONS || "3", 10),
+      idleTimeoutMillis: parseInt(PG_IDLE_TIMEOUT || "10000", 10),
+      connectionTimeoutMillis: parseInt(PG_CONNECTION_TIMEOUT || "5000", 10),
+      ssl: true,
+    })
+  );
+}
 
 // Función para ejecutar consultas con caché opcional y reintentos
 export async function query(
   text: string,
   params?: any[],
-  useCache: boolean = false,
-  maxRetries: number = 3
+  options: {
+    useCache?: boolean;
+    maxRetries?: number;
+    role?: RolesSistema;
+    executeOnAllInstances?: boolean;
+  } = {}
 ) {
+  const {
+    useCache = false,
+    maxRetries = 3,
+    role,
+    executeOnAllInstances = false,
+  } = options;
+
+  const group = getRoleGroup(role);
+  const queryCache = queryCaches[group];
+
+  // Si se requiere ejecutar en todas las instancias (solo para INSERT, UPDATE, DELETE)
+  if (executeOnAllInstances) {
+    return executeOnAllInstancesInGroup(group, text, params, maxRetries);
+  }
+
   let retries = 0;
   let lastError;
 
@@ -41,20 +186,21 @@ export async function query(
         const cachedItem = queryCache.get(cacheKey);
 
         if (cachedItem && Date.now() - cachedItem.timestamp < CACHE_TTL) {
-          console.log("Cache hit:", cacheKey);
+          console.log(`Cache hit (${group}):`, cacheKey);
           return cachedItem.result;
         }
       }
 
       // Si no hay caché o está desactualizado, ejecutar la consulta
       const start = Date.now();
+      const pool = getRandomPool(group);
       const client = await pool.connect();
 
       try {
         const res = await client.query(text, params);
         const duration = Date.now() - start;
 
-        console.log("Query ejecutada", {
+        console.log(`Query ejecutada (${group})`, {
           text: text.substring(0, 80) + (text.length > 80 ? "..." : ""),
           duration,
           filas: res.rowCount,
@@ -77,7 +223,10 @@ export async function query(
     } catch (error) {
       lastError = error;
       retries++;
-      console.error(`Error en intento ${retries}/${maxRetries}:`, error);
+      console.error(
+        `Error en intento ${retries}/${maxRetries} (${group}):`,
+        error
+      );
 
       if (retries < maxRetries) {
         // Espera exponencial entre reintentos (1s, 2s, 4s, etc.)
@@ -89,23 +238,104 @@ export async function query(
   }
 
   console.error(
-    "Error en consulta SQL después de todos los reintentos:",
+    `Error en consulta SQL después de todos los reintentos (${group}):`,
     lastError
   );
   throw lastError;
 }
 
-// Función para cerrar el pool (útil al finalizar el script)
-export async function closePool() {
-  await pool.end();
+// Función para ejecutar una consulta en todas las instancias de un grupo
+async function executeOnAllInstancesInGroup(
+  group: string,
+  text: string,
+  params?: any[],
+  maxRetries: number = 3
+): Promise<any> {
+  const instances = postgresInstances[group];
+  const results = [];
+
+  for (const pool of instances) {
+    let retries = 0;
+    let lastError;
+    let success = false;
+
+    while (retries < maxRetries && !success) {
+      try {
+        const client = await pool.connect();
+        try {
+          const res = await client.query(text, params);
+          results.push(res);
+          success = true;
+        } finally {
+          client.release();
+        }
+      } catch (error) {
+        lastError = error;
+        retries++;
+
+        if (retries < maxRetries) {
+          const waitTime = 1000 * Math.pow(2, retries - 1);
+          await new Promise((resolve) => setTimeout(resolve, waitTime));
+        }
+      }
+    }
+
+    if (!success) {
+      console.error(
+        `No se pudo ejecutar en todas las instancias del grupo ${group}:`,
+        lastError
+      );
+      throw lastError;
+    }
+  }
+
+  // Devolver el resultado de la primera instancia (principalmente para compatibilidad)
+  return results[0];
 }
 
-// Limpiar caché periódicamente
+// Función para cerrar todos los pools (útil al finalizar el script)
+export async function closeAllPools() {
+  const closePromises = [];
+
+  for (const group in postgresInstances) {
+    for (const pool of postgresInstances[group]) {
+      closePromises.push(pool.end());
+    }
+  }
+
+  await Promise.all(closePromises);
+  console.log("Todos los pools de conexión han sido cerrados");
+}
+
+// Limpiar caché periódicamente para todos los grupos
 setInterval(() => {
   const now = Date.now();
-  for (const [key, value] of queryCache.entries()) {
-    if (now - value.timestamp > CACHE_TTL) {
-      queryCache.delete(key);
+
+  for (const group in queryCaches) {
+    const queryCache = queryCaches[group];
+    for (const [key, value] of queryCache.entries()) {
+      if (now - value.timestamp > CACHE_TTL) {
+        queryCache.delete(key);
+      }
     }
   }
 }, CACHE_TTL);
+
+// Mantener compatibilidad con la versión anterior
+export async function closePool() {
+  await closeAllPools();
+}
+
+// Para compatibilidad con código existente que espera la función query original
+const defaultQuery = async (
+  text: string,
+  params?: any[],
+  useCache: boolean = false
+) => {
+  return query(text, params, { useCache });
+};
+
+export default {
+  query: defaultQuery,
+  closePool,
+};
