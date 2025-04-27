@@ -101,6 +101,7 @@ async function main() {
       // Desbloquear todos los roles sin importar lo que suceda
       try {
         await desbloquearRoles(todosLosRoles);
+        
       } catch (unlockError) {
         console.warn("Error al desbloquear roles:", unlockError);
       }
