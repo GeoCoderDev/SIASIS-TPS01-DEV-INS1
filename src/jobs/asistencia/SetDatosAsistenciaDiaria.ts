@@ -39,10 +39,10 @@ async function generarDatosAsistenciaDiaria(): Promise<DatosAsistenciaHoyIE20935
     fechasAñoEscolar.Fin_Año_Escolar
   );
 
-  // Obtener vacaciones interescolares
+  // Obtener vacaciones interescolares - UNA SOLA VEZ
   const vacacionesInterescolares = await obtenerVacacionesInterescolares();
 
-  // Obtener y verificar semana de gestión
+  // Obtener semana de gestión - UNA SOLA VEZ
   const semanaGestion = await obtenerSemanaDeGestion();
   const dentroSemanaGestion = verificarDentroSemanaGestion(
     fechaLocalPeru,
@@ -52,19 +52,33 @@ async function generarDatosAsistenciaDiaria(): Promise<DatosAsistenciaHoyIE20935
   // Obtener comunicados activos para hoy
   const comunicados = await obtenerComunicadosActivos(fechaLocalPeru);
 
-  // Obtener listas de personal
+  // Obtener listas de personal, pasando fechas especiales
   const personalAdministrativo =
-    await obtenerPersonalAdministrativoParaTomarAsistencia();
+    await obtenerPersonalAdministrativoParaTomarAsistencia(
+      fechaLocalPeru,
+      vacacionesInterescolares,
+      semanaGestion
+    );
 
   const profesoresPrimaria =
     await obtenerProfesoresPrimariaParaTomarAsistencia();
+
   const profesoresSecundaria =
-    await obtenerProfesoresSecundariaParaTomarAsistencia(fechaLocalPeru);
+    await obtenerProfesoresSecundariaParaTomarAsistencia(
+      fechaLocalPeru,
+      vacacionesInterescolares,
+      semanaGestion
+    );
 
   const auxiliares = await obtenerAuxiliaresParaTomarAsistencia();
 
-  // Obtener configuraciones de horarios
-  const horariosGenerales = await obtenerHorariosGenerales();
+  // Obtener configuraciones de horarios con los nuevos parámetros
+  const horariosGenerales = await obtenerHorariosGenerales(
+    fechaLocalPeru,
+    vacacionesInterescolares,
+    semanaGestion
+  );
+
   const horariosEscolares = await obtenerHorariosEscolares();
 
   // Construir el objeto de datos
@@ -86,8 +100,6 @@ async function generarDatosAsistenciaDiaria(): Promise<DatosAsistenciaHoyIE20935
 
   return datosAsistencia;
 }
-
-// Modificación de main.ts para incluir registro de asistencia de personal inactivo
 
 async function main() {
   try {

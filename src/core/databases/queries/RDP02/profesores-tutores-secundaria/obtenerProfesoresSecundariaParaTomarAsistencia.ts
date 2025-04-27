@@ -1,5 +1,7 @@
 import { DURACION_HORA_ACADEMICA_EN_MINUTOS } from "../../../../../constants/DURACION_HORA_ACADEMICA_EN_MINUTOS";
 import { ProfesorTutorSecundariaParaTomaDeAsistencia } from "../../../../../interfaces/shared/Asistencia/DatosAsistenciaHoyIE20935";
+import { verificarDentroSemanaGestion } from "../../../../utils/verificators/verificarDentroSemanaGestion";
+import { verificarDentroVacacionesInterescolares } from "../../../../utils/verificators/verificarDentroVacacionesInterescolares";
 import RDP02_DB_INSTANCES from '../../../connectors/postgres';
 
 /**
@@ -66,12 +68,124 @@ function calcularHoraConRecreo(
 /**
  * Obtiene la lista de profesores de secundaria para tomar asistencia en una fecha específica
  * @param fecha - Fecha para la que se buscan los profesores
+ * @param vacacionesInterescolares - Lista de periodos de vacaciones interescolares
+ * @param semanaGestion - Datos de la semana de gestión
+ * @param horariosEspeciales - Horarios especiales preconsultados (opcional)
  * @returns Lista de profesores con sus horarios calculados para el día
  */
 export async function obtenerProfesoresSecundariaParaTomarAsistencia(
-  fecha: Date
+  fecha: Date,
+  vacacionesInterescolares: any[],
+  semanaGestion: any | null,
+  horariosEspeciales?: {
+    inicio?: Date;
+    fin?: Date;
+    tipo?: string;
+  }
 ): Promise<ProfesorTutorSecundariaParaTomaDeAsistencia[]> {
   try {
+    // Verificar si estamos en vacaciones interescolares o semana de gestión
+    const enVacacionesInterescolares = verificarDentroVacacionesInterescolares(
+      fecha, 
+      vacacionesInterescolares
+    );
+
+    const enSemanaGestion = verificarDentroSemanaGestion(
+      fecha, 
+      semanaGestion
+    );
+
+    // Si estamos en un periodo especial, usamos los horarios especiales
+    if (enVacacionesInterescolares || enSemanaGestion) {
+      let horaInicio: Date | null = null;
+      let horaFin: Date | null = null;
+
+      // Si nos pasaron horarios especiales preconsultados, los usamos
+      if (horariosEspeciales && horariosEspeciales.inicio && horariosEspeciales.fin) {
+        horaInicio = horariosEspeciales.inicio;
+        horaFin = horariosEspeciales.fin;
+      } else {
+        // Si no tenemos horarios preconsultados, debemos consultarlos
+        const periodoTipo = enVacacionesInterescolares
+          ? "Vacaciones_Interescolares"
+          : "Semana_Gestion";
+
+        // Consulta para obtener los horarios especiales
+        const horariosEspecialesQuery = `
+          SELECT 
+            "Nombre", "Valor"
+          FROM 
+            "T_Horarios_Asistencia"
+          WHERE 
+            "Nombre" IN (
+              'Inicio_Horario_Laboral_Para_Personal_General_${periodoTipo}',
+              'Fin_Horario_Laboral_Para_Personal_General_${periodoTipo}'
+            )
+        `;
+
+        const horariosEspecialesResult = await RDP02_DB_INSTANCES.query(horariosEspecialesQuery);
+
+        // Extraer los valores
+        for (const row of horariosEspecialesResult.rows) {
+          if (row.Nombre.includes("Inicio")) {
+            horaInicio = new Date(row.Valor);
+          } else if (row.Nombre.includes("Fin")) {
+            horaFin = new Date(row.Valor);
+          }
+        }
+      }
+
+      // Verificar que obtuvimos ambos valores
+      if (!horaInicio || !horaFin) {
+        throw new Error(`No se pudieron identificar correctamente los horarios especiales`);
+      }
+
+      // Obtener los profesores
+      const profesoresQuery = `
+        SELECT 
+          ps."DNI_Profesor_Secundaria", 
+          ps."Nombres", 
+          ps."Apellidos", 
+          ps."Genero", 
+          ps."Google_Drive_Foto_ID"
+        FROM "T_Profesores_Secundaria" ps
+        WHERE ps."Estado" = true
+      `;
+      const profesoresResult = await RDP02_DB_INSTANCES.query(profesoresQuery);
+
+      // Crear horarios especiales para todos los profesores
+      return profesoresResult.rows.map((profesor: any) => {
+        // Crear fechas específicas para este día
+        const entradaEspecial = new Date(fecha);
+        entradaEspecial.setHours(
+          horaInicio!.getHours(),
+          horaInicio!.getMinutes(),
+          horaInicio!.getSeconds(),
+          0
+        );
+
+        const salidaEspecial = new Date(fecha);
+        salidaEspecial.setHours(
+          horaFin!.getHours(),
+          horaFin!.getMinutes(),
+          horaFin!.getSeconds(),
+          0
+        );
+
+        return {
+          DNI_Profesor_Secundaria: profesor.DNI_Profesor_Secundaria,
+          Nombres: profesor.Nombres,
+          Apellidos: profesor.Apellidos,
+          Genero: profesor.Genero,
+          Google_Drive_Foto_ID: profesor.Google_Drive_Foto_ID,
+          Hora_Entrada_Dia_Actual: entradaEspecial,
+          Hora_Salida_Dia_Actual: salidaEspecial,
+        };
+      });
+    }
+
+    // Si no estamos en un periodo especial, continuamos con la lógica normal
+    
     // Obtener el día de la semana (0-6, 0 siendo domingo)
     const diaSemana = fecha.getDay();
     // Convertir a formato usado en la base de datos (1-7, 1 siendo lunes)
