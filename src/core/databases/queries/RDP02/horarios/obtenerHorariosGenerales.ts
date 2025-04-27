@@ -1,6 +1,5 @@
-// src/core/database/queries/configuracion/obtenerHorariosGenerales.ts
-import { query } from "../../../connectors/postgres";
 import { convertirStringTiempoADate } from "../../../../utils/functions/parsers/convertirStringATiempoDate";
+import RDP02_DB_INSTANCES from '../../../connectors/postgres';
 
 export async function obtenerHorariosGenerales() {
   const fechaHoy = new Date();
@@ -18,7 +17,7 @@ export async function obtenerHorariosGenerales() {
     )
   `;
 
-  const result = await query(sql);
+  const result = await RDP02_DB_INSTANCES.query(sql);
 
   // Crear un objeto para acceder fácilmente a los valores por nombre
   const horarios = result.rows.reduce((acc: any, row: any) => {

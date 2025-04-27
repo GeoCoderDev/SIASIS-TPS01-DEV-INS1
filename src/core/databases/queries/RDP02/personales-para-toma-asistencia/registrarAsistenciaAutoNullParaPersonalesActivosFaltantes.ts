@@ -1,4 +1,4 @@
-import { query } from "../../../connectors/postgres";
+import RDP02_DB_INSTANCES from '../../../connectors/postgres';
 
 export async function registrarAsistenciaConValoresNull(
   tabla: string,
@@ -16,7 +16,7 @@ export async function registrarAsistenciaConValoresNull(
         WHERE "${campoDNI}" = $1 AND "Mes" = $2
       `;
 
-    const resultVerificar = await query(sqlVerificar, [dni, mes]);
+    const resultVerificar = await RDP02_DB_INSTANCES.query(sqlVerificar, [dni, mes]);
 
     // Objeto con valores nulos
     const entradaNula = {
@@ -64,7 +64,7 @@ export async function registrarAsistenciaConValoresNull(
             WHERE "${idKey}" = $2
           `;
 
-        await query(sqlActualizar, [jsonActual, registro[idKey]]);
+        await RDP02_DB_INSTANCES.query(sqlActualizar, [jsonActual, registro[idKey]]);
       }
     } else {
       // No existe registro para este mes, crearlo
@@ -76,7 +76,7 @@ export async function registrarAsistenciaConValoresNull(
           VALUES ($1, $2, $3)
         `;
 
-      await query(sqlInsertar, [dni, mes, nuevoJson]);
+      await RDP02_DB_INSTANCES.query(sqlInsertar, [dni, mes, nuevoJson]);
     }
   } catch (error) {
     console.error(

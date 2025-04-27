@@ -1,4 +1,4 @@
-import { query } from "../../../connectors/postgres";
+import RDP02_DB_INSTANCES from '../../../connectors/postgres';
 
 export async function obtenerVacacionesInterescolares() {
   const sql = `
@@ -10,6 +10,6 @@ export async function obtenerVacacionesInterescolares() {
     ORDER BY "Fecha_Inicio" ASC
   `;
 
-  const result = await query(sql);
+  const result = await RDP02_DB_INSTANCES.query(sql);
   return result.rows;
 }

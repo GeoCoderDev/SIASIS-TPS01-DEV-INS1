@@ -1,5 +1,5 @@
 import { RolesSistema } from "../../../../../interfaces/shared/RolesSistema";
-import { query } from "../../../connectors/postgres";
+import RDP02_DB_INSTANCES from '../../../connectors/postgres';
 
 /**
  * Convierte roles del enum RolesSistema a sus correspondientes IDs en la tabla T_Bloqueo_Roles
@@ -17,7 +17,7 @@ export async function obtenerIdsRoles(
         WHERE "Rol" IN (${rolesStr})
       `;
 
-    const result = await query(sql);
+    const result = await RDP02_DB_INSTANCES.query(sql);
     return result.rows.map((row: any) => row.Id_Bloqueo_Rol);
   } catch (error) {
     console.error("Error al obtener IDs de roles:", error);
@@ -45,7 +45,7 @@ export async function bloquearRoles(
           SET "Bloqueo_Total" = true, 
               "Timestamp_Desbloqueo" = $1
         `;
-      await query(sql, [timestamp]);
+      await RDP02_DB_INSTANCES.query(sql, [timestamp]);
       console.log(
         `Todos los roles han sido bloqueados por ${tiempoBloqueoMinutos} minutos`
       );
@@ -66,7 +66,7 @@ export async function bloquearRoles(
               "Timestamp_Desbloqueo" = $1
           WHERE "Id_Bloqueo_Rol" = ANY($2)
         `;
-      await query(sql, [timestamp, roleIds]);
+      await RDP02_DB_INSTANCES.query(sql, [timestamp, roleIds]);
       console.log(
         `Roles ${roles.join(
           ", "

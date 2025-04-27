@@ -1,7 +1,7 @@
 import { NOMBRE_ARCHIVO_CON_DATOS_ASISTENCIA_DIARIOS } from "../../../../../constants/NOMBRE_ARCHIVOS_SISTEMA";
 import { DatosAsistenciaHoyIE20935 } from "../../../../../interfaces/shared/Asistencia/DatosAsistenciaHoyIE20935";
 import { RolesSistema } from "../../../../../interfaces/shared/RolesSistema";
-import { query } from "../../../connectors/postgres";
+import RDP02_DB_INSTANCES from "../../../connectors/postgres";
 import { PersonalActivo } from "../personales-para-toma-asistencia/verificarYRegistrarAsistenciasIncompletas";
 
 export async function obtenerUltimoArchivoAsistencia(): Promise<string> {
@@ -14,7 +14,7 @@ export async function obtenerUltimoArchivoAsistencia(): Promise<string> {
       LIMIT 1
     `;
 
-    const result = await query(sql);
+    const result = await RDP02_DB_INSTANCES.query(sql);
 
     if (result.rowCount === 0) {
       throw new Error(

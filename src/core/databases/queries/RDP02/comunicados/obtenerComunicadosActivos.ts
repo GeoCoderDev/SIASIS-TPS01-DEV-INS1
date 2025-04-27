@@ -1,5 +1,5 @@
-import { query } from "../../../connectors/postgres";
 import { T_Comunicados } from "@prisma/client";
+import RDP02_DB_INSTANCES from "../../../connectors/postgres";
 
 export async function obtenerComunicadosActivos(
   fecha: Date
@@ -13,7 +13,7 @@ export async function obtenerComunicadosActivos(
     ORDER BY "Fecha_Inicio" DESC
   `;
 
-  const result = await query(sql, [fechaStr]);
+  const result = await RDP02_DB_INSTANCES.query(sql, [fechaStr]);
 
   return result.rows;
 }

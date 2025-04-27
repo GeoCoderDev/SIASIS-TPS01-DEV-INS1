@@ -1,5 +1,5 @@
 import { RolesSistema } from "../../../../../interfaces/shared/RolesSistema";
-import { query } from "../../../connectors/postgres";
+import RDP02_DB_INSTANCES from '../../../connectors/postgres';
 
 interface PersonalInactivo {
   dni: string;
@@ -33,7 +33,7 @@ export async function obtenerPersonalInactivoParaRegistroAutomatico(): Promise<
         WHERE "Estado" = false
       `;
 
-      const auxiliaresInactivos = await query(sqlAuxiliares);
+      const auxiliaresInactivos = await RDP02_DB_INSTANCES.query(sqlAuxiliares);
       auxiliaresInactivos.rows.forEach((row: any) => {
         personalInactivo.push({
           dni: row.dni,
@@ -58,7 +58,7 @@ export async function obtenerPersonalInactivoParaRegistroAutomatico(): Promise<
         WHERE "Estado" = false
       `;
 
-      const profesoresPrimariaInactivos = await query(sqlProfesoresPrimaria);
+      const profesoresPrimariaInactivos = await RDP02_DB_INSTANCES.query(sqlProfesoresPrimaria);
       profesoresPrimariaInactivos.rows.forEach((row: any) => {
         personalInactivo.push({
           dni: row.dni,
@@ -83,7 +83,7 @@ export async function obtenerPersonalInactivoParaRegistroAutomatico(): Promise<
         WHERE "Estado" = false
       `;
 
-      const profesoresSecundariaInactivos = await query(
+      const profesoresSecundariaInactivos = await RDP02_DB_INSTANCES.query(
         sqlProfesoresSecundaria
       );
       profesoresSecundariaInactivos.rows.forEach((row: any) => {
@@ -114,7 +114,7 @@ export async function obtenerPersonalInactivoParaRegistroAutomatico(): Promise<
         WHERE "Estado" = false
       `;
 
-      const personalAdministrativoInactivo = await query(
+      const personalAdministrativoInactivo = await RDP02_DB_INSTANCES.query(
         sqlPersonalAdministrativo
       );
       personalAdministrativoInactivo.rows.forEach((row: any) => {
@@ -165,7 +165,7 @@ async function verificarTablasExistentes(tablas: string[]): Promise<string[]> {
   try {
     // Verificamos con los nombres formateados y también con versiones en minúsculas
     const tablasMinusculas = tablasFormateadas.map((t) => t.toLowerCase());
-    const result = await query(sql, [tablasFormateadas, tablasMinusculas]);
+    const result = await RDP02_DB_INSTANCES.query(sql, [tablasFormateadas, tablasMinusculas]);
 
     console.log(
       "Tablas encontradas en la base de datos:",

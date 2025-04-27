@@ -1,5 +1,5 @@
 import { PersonalAdministrativoParaTomaDeAsistencia } from "../../../../../interfaces/shared/Asistencia/DatosAsistenciaHoyIE20935";
-import { query } from "../../../connectors/postgres";
+import RDP02_DB_INSTANCES from '../../../connectors/postgres';
 
 export async function obtenerPersonalAdministrativoParaTomarAsistencia(): Promise<
   PersonalAdministrativoParaTomaDeAsistencia[]
@@ -18,7 +18,7 @@ export async function obtenerPersonalAdministrativoParaTomarAsistencia(): Promis
     WHERE "Estado" = true
   `;
 
-  const result = await query(sql);
+  const result = await RDP02_DB_INSTANCES.query(sql);
 
   // Obtener la fecha actual en Perú (UTC-5)
   const fechaUTC = new Date();

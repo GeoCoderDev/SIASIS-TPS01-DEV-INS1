@@ -1,4 +1,4 @@
-import { query } from "../../../connectors/postgres";
+import RDP02_DB_INSTANCES from "../../../connectors/postgres";
 
 export async function obtenerFechasAñoEscolar() {
   const sql = `
@@ -10,7 +10,7 @@ export async function obtenerFechasAñoEscolar() {
     )
   `;
 
-  const result = await query(sql);
+  const result = await RDP02_DB_INSTANCES.query(sql);
 
   // Convertir a un objeto para fácil acceso
   const fechas = result.rows.reduce((acc: any, row: any) => {

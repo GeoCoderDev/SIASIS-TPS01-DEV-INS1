@@ -1,6 +1,6 @@
 // src/core/database/queries/eventos/verificarDiaEvento.ts
 import { T_Eventos } from "@prisma/client";
-import { query } from "../../../connectors/postgres";
+import RDP02_DB_INSTANCES from "../../../connectors/postgres";
 
 export async function verificarDiaEvento(
   fecha: Date
@@ -14,7 +14,7 @@ export async function verificarDiaEvento(
     LIMIT 1
   `;
 
-  const result = await query(sql, [fechaStr]);
+  const result = await RDP02_DB_INSTANCES.query(sql, [fechaStr]);
 
   if (result.rows.length === 0) {
     return false;

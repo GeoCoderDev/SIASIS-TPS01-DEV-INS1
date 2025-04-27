@@ -1,6 +1,6 @@
 import { DURACION_HORA_ACADEMICA_EN_MINUTOS } from "../../../../../constants/DURACION_HORA_ACADEMICA_EN_MINUTOS";
 import { ProfesorTutorSecundariaParaTomaDeAsistencia } from "../../../../../interfaces/shared/Asistencia/DatosAsistenciaHoyIE20935";
-import { query } from "../../../connectors/postgres";
+import RDP02_DB_INSTANCES from '../../../connectors/postgres';
 
 /**
  * Calcula el horario considerando los recreos
@@ -83,7 +83,7 @@ export async function obtenerProfesoresSecundariaParaTomarAsistencia(
       FROM "T_Ajustes_Generales_Sistema" 
       WHERE "Nombre" IN ('BLOQUE_INICIO_RECREO_SECUNDARIA', 'DURACION_RECREO_SECUNDARIA_MINUTOS')
     `;
-    const ajustesResult = await query(ajustesQuery);
+    const ajustesResult = await RDP02_DB_INSTANCES.query(ajustesQuery);
 
     // Extraer valores de los ajustes
     const ajustes = ajustesResult.rows.reduce((acc: any, row: any) => {
@@ -101,7 +101,7 @@ export async function obtenerProfesoresSecundariaParaTomarAsistencia(
       FROM "T_Horarios_Asistencia" 
       WHERE "Nombre" = 'Hora_Inicio_Asistencia_Secundaria'
     `;
-    const horariosResult = await query(horariosQuery);
+    const horariosResult = await RDP02_DB_INSTANCES.query(horariosQuery);
 
     // Extraer la hora de inicio como objeto Date
     const horaInicioStr = horariosResult.rows[0]?.Valor || "13:00:00";
@@ -144,7 +144,7 @@ export async function obtenerProfesoresSecundariaParaTomarAsistencia(
       WHERE ps."Estado" = true AND ch."Dia_Semana" = $1
       GROUP BY ps."DNI_Profesor_Secundaria", ps."Nombres", ps."Apellidos", ps."Genero", ps."Google_Drive_Foto_ID"
     `;
-    const profesoresResult = await query(profesoresQuery, [diaSemanaDB]);
+    const profesoresResult = await RDP02_DB_INSTANCES.query(profesoresQuery, [diaSemanaDB]);
 
     // 4. Convertir resultados a objetos con horarios calculados
     return profesoresResult.rows.map((profesor: any) => {

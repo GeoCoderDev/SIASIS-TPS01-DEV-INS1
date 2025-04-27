@@ -1,6 +1,6 @@
 // src/core/database/queries/personal/obtenerProfesoresPrimaria.ts
 import { ProfesoresPrimariaParaTomaDeAsistencia } from "../../../../../interfaces/shared/Asistencia/DatosAsistenciaHoyIE20935";
-import { query } from "../../../connectors/postgres";
+import RDP02_DB_INSTANCES from "../../../connectors/postgres";
 
 export async function obtenerProfesoresPrimariaParaTomarAsistencia(): Promise<
   ProfesoresPrimariaParaTomaDeAsistencia[]
@@ -16,7 +16,7 @@ export async function obtenerProfesoresPrimariaParaTomarAsistencia(): Promise<
     WHERE "Estado" = true
   `;
 
-  const result = await query(sql);
+  const result = await RDP02_DB_INSTANCES.query(sql);
 
   return result.rows;
 }

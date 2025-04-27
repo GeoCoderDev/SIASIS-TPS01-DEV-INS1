@@ -2,7 +2,7 @@
 import { HorarioTomaAsistencia } from "../../../../../interfaces/shared/Asistencia/DatosAsistenciaHoyIE20935";
 import { NivelEducativo } from "../../../../../interfaces/shared/NivelEducativo";
 import { convertirStringTiempoADate } from "../../../../utils/functions/parsers/convertirStringATiempoDate";
-import { query } from "../../../connectors/postgres";
+import RDP02_DB_INSTANCES from '../../../connectors/postgres';
 
 export async function obtenerHorariosEscolares(): Promise<
   Record<NivelEducativo, HorarioTomaAsistencia>
@@ -20,7 +20,7 @@ export async function obtenerHorariosEscolares(): Promise<
     )
   `;
 
-  const result = await query(sql);
+  const result = await RDP02_DB_INSTANCES.query(sql);
   const horarios = result.rows.reduce((acc: any, row: any) => {
     acc[row.Nombre] = row.Valor;
     return acc;

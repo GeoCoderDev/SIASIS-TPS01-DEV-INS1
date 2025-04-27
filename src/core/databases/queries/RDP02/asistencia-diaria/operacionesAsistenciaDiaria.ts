@@ -48,6 +48,5 @@ export async function upsertArchivoDatosAsistenciaDiariosEnBD(
     descripcion,
   ];
 
-  // Usar el db.query que automáticamente ejecuta escrituras en todas las instancias
   return await RDP02_DB_INSTANCES.query(sql, params);
 }

@@ -1,4 +1,4 @@
-import { query } from "../../../connectors/postgres";
+import RDP02_DB_INSTANCES from '../../../connectors/postgres';
 
 export async function verificarTablasPorRol(): Promise<Map<string, string>> {
   // Lista de todas las posibles tablas de control de asistencia
@@ -33,7 +33,7 @@ export async function verificarTablasPorRol(): Promise<Map<string, string>> {
   `;
 
   try {
-    const result = await query(sql, [tablasFormateadas, tablasMinusculas]);
+    const result = await RDP02_DB_INSTANCES.query(sql, [tablasFormateadas, tablasMinusculas]);
 
     // Crear un mapeo entre los nombres originales y los nombres reales
     const tablasExistentes = new Map<string, string>();

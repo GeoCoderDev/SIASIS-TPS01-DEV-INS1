@@ -1,6 +1,6 @@
 import { obtenerFechasActuales } from "../../../../utils/dates/obtenerFechasActuales";
-import { query } from "../../../connectors/postgres";
 import { obtenerPersonalInactivoParaRegistroAutomatico } from "./obtenerPersonalInactivoParaRegistroAutomatico";
+import RDP02_DB_INSTANCES from '../../../connectors/postgres';
 
 export async function registrarAsistenciaAutoNullParaPersonalInactivo(): Promise<{
   totalRegistros: number;
@@ -64,7 +64,7 @@ export async function registrarAsistenciaAutoNullParaPersonalInactivo(): Promise
     `;
 
   const tablasMinusculas = tablasFormateadas.map((t) => t.toLowerCase());
-  const resultTablas = await query(sql, [tablasFormateadas, tablasMinusculas]);
+  const resultTablas = await RDP02_DB_INSTANCES.query(sql, [tablasFormateadas, tablasMinusculas]);
 
   // Crear un mapeo entre los nombres originales y los nombres reales
   const mapaTablas = new Map<string, string>();
@@ -176,7 +176,7 @@ async function verificarYRegistrarAsistenciaInactiva(
         WHERE "${campoDNI}" = $1 AND "Mes" = $2
       `;
 
-    const resultVerificar = await query(sqlVerificar, [dni, mes]);
+    const resultVerificar = await RDP02_DB_INSTANCES.query(sqlVerificar, [dni, mes]);
 
     if (resultVerificar.rowCount > 0) {
       // Ya existe un registro, actualizarlo para agregar el día actual como null
@@ -208,7 +208,7 @@ async function verificarYRegistrarAsistenciaInactiva(
           WHERE "${campoId}" = $2
         `;
 
-      await query(sqlActualizar, [jsonActual, registro[idKey]]);
+      await RDP02_DB_INSTANCES.query(sqlActualizar, [jsonActual, registro[idKey]]);
       return { creado: false, actualizado: true };
     } else {
       // No existe un registro, crearlo
@@ -220,7 +220,7 @@ async function verificarYRegistrarAsistenciaInactiva(
           VALUES ($1, $2, $3)
         `;
 
-      await query(sqlInsertar, [dni, mes, nuevoJson]);
+      await RDP02_DB_INSTANCES.query(sqlInsertar, [dni, mes, nuevoJson]);
       return { creado: true, actualizado: false };
     }
   } catch (error) {
