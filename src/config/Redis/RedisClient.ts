@@ -2,6 +2,8 @@
 
 import { Redis } from "@upstash/redis";
 import { TipoAsistencia } from "../../interfaces/shared/AsistenciaRequests";
+import { ENTORNO } from "../../constants/ENTORNO";
+import { Entorno } from "../../interfaces/shared/Entornos";
 
 // Estructura para almacenar las instancias de Redis
 type RedisInstances = {
@@ -9,29 +11,54 @@ type RedisInstances = {
 };
 
 // Inicialización de las instancias de Redis
-const redisInstances: RedisInstances = {
-  [TipoAsistencia.ParaPersonal]: [
-    new Redis({
-      url: process.env.RDP05_INS1_REDIS_BD_BASE_URL_API!,
-      token: process.env.RDP05_INS1_REDIS_BD_TOKEN_FOR_API!,
-    }),
-    // Aquí puedes agregar más instancias para este tipo en el futuro
-  ],
-  [TipoAsistencia.ParaEstudiantesSecundaria]: [
-    new Redis({
-      url: process.env.RDP05_INS2_REDIS_BD_BASE_URL_API!,
-      token: process.env.RDP05_INS2_REDIS_BD_TOKEN_FOR_API!,
-    }),
-    // Aquí puedes agregar más instancias para este tipo en el futuro
-  ],
-  [TipoAsistencia.ParaEstudiantesPrimaria]: [
-    new Redis({
-      url: process.env.RDP05_INS3_REDIS_BD_BASE_URL_API!,
-      token: process.env.RDP05_INS3_REDIS_BD_TOKEN_FOR_API!,
-    }),
-    // Aquí puedes agregar más instancias para este tipo en el futuro
-  ],
-};
+const redisInstances: RedisInstances =
+  ENTORNO !== Entorno.PRODUCCION
+    ? {
+        [TipoAsistencia.ParaPersonal]: [
+          new Redis({
+            url: process.env.RDP05_INS1_REDIS_BD_BASE_URL_API!,
+            token: process.env.RDP05_INS1_REDIS_BD_TOKEN_FOR_API!,
+          }),
+          // Aquí puedes agregar más instancias para este tipo en el futuro
+        ],
+        [TipoAsistencia.ParaEstudiantesSecundaria]: [
+          new Redis({
+            url: process.env.RDP05_INS1_REDIS_BD_BASE_URL_API!,
+            token: process.env.RDP05_INS1_REDIS_BD_TOKEN_FOR_API!,
+          }),
+          // Aquí puedes agregar más instancias para este tipo en el futuro
+        ],
+        [TipoAsistencia.ParaEstudiantesPrimaria]: [
+          new Redis({
+            url: process.env.RDP05_INS1_REDIS_BD_BASE_URL_API!,
+            token: process.env.RDP05_INS1_REDIS_BD_TOKEN_FOR_API!,
+          }),
+          // Aquí puedes agregar más instancias para este tipo en el futuro
+        ],
+      }
+    : {
+        [TipoAsistencia.ParaPersonal]: [
+          new Redis({
+            url: process.env.RDP05_INS1_REDIS_BD_BASE_URL_API!,
+            token: process.env.RDP05_INS1_REDIS_BD_TOKEN_FOR_API!,
+          }),
+          // Aquí puedes agregar más instancias para este tipo en el futuro
+        ],
+        [TipoAsistencia.ParaEstudiantesSecundaria]: [
+          new Redis({
+            url: process.env.RDP05_INS2_REDIS_BD_BASE_URL_API!,
+            token: process.env.RDP05_INS2_REDIS_BD_TOKEN_FOR_API!,
+          }),
+          // Aquí puedes agregar más instancias para este tipo en el futuro
+        ],
+        [TipoAsistencia.ParaEstudiantesPrimaria]: [
+          new Redis({
+            url: process.env.RDP05_INS3_REDIS_BD_BASE_URL_API!,
+            token: process.env.RDP05_INS3_REDIS_BD_TOKEN_FOR_API!,
+          }),
+          // Aquí puedes agregar más instancias para este tipo en el futuro
+        ],
+      };
 
 // Función para obtener una instancia aleatoria de Redis
 export const getRandomRedisClient = (
