@@ -2,7 +2,7 @@ import { redisClient } from "../../../../config/Redis/RedisClient";
 import { NOMBRE_ARCHIVO_CON_DATOS_ASISTENCIA_DIARIOS } from "../../../../constants/NOMBRE_ARCHIVOS_SISTEMA";
 import {
   buscarArchivoDatosAsistenciaDiariosEnBD,
-  registrarArchivoDatosAsistenciaDiariosEnBD,
+  upsertArchivoDatosAsistenciaDiariosEnBD,
 } from "../../../databases/queries/RDP02/asistencia-diaria/operacionesAsistenciaDiaria";
 import { deleteFileFromDrive } from "./deleteFileFromDrive";
 import { uploadJsonToDrive } from "./uploadJsonToDrive";
@@ -47,7 +47,7 @@ export async function actualizarArchivoDatosAsistenciaDiariosRespaldoEnGoogleDri
       NOMBRE_ARCHIVO_CON_DATOS_ASISTENCIA_DIARIOS
     );
 
-    // 4. Guardar archivo en todas las instancias de Redis
+    // 4. Guardar archivo en todas las
     await redisClient().set(
       NOMBRE_ARCHIVO_CON_DATOS_ASISTENCIA_DIARIOS,
       nuevoArchivo.id
@@ -55,9 +55,8 @@ export async function actualizarArchivoDatosAsistenciaDiariosRespaldoEnGoogleDri
 
     // 5. Actualizar los registros en la base de datos
     console.log(`Archivo subido con éxito. Nuevo ID: ${nuevoArchivo.id}`);
-    const registroBD = await registrarArchivoDatosAsistenciaDiariosEnBD(
-      nuevoArchivo.id,
-      archivoExistente
+    const registroBD = await upsertArchivoDatosAsistenciaDiariosEnBD(
+      nuevoArchivo.id
     );
 
     console.log("Registro en BD actualizado:", registroBD);

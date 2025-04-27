@@ -1,5 +1,5 @@
 import { NOMBRE_ARCHIVO_CON_DATOS_ASISTENCIA_DIARIOS } from "../../../../../constants/NOMBRE_ARCHIVOS_SISTEMA";
-import { query } from "../../../connectors/postgres";
+import RDP02_DB_INSTANCES from "../../../connectors/postgres";
 
 /**
  * Busca el archivo de datos de asistencia en la base de datos
@@ -11,7 +11,7 @@ export async function buscarArchivoDatosAsistenciaDiariosEnBD() {
     WHERE "Nombre_Archivo" = $1
   `;
 
-  const result = await query(sql, [
+  const result = await RDP02_DB_INSTANCES.query(sql, [
     NOMBRE_ARCHIVO_CON_DATOS_ASISTENCIA_DIARIOS,
   ]);
 
@@ -22,50 +22,32 @@ export async function buscarArchivoDatosAsistenciaDiariosEnBD() {
   return null;
 }
 
-/**
- * Registra o actualiza la información del archivo en la base de datos
- * @param googleDriveId ID del archivo en Google Drive
- * @param archivoExistente Información del archivo existente (si existe)
- * @returns El resultado de la operación en la base de datos
- */
-export async function registrarArchivoDatosAsistenciaDiariosEnBD(
-  googleDriveId: string,
-  archivoExistente: any = null
+export async function upsertArchivoDatosAsistenciaDiariosEnBD(
+  googleDriveId: string
 ) {
-  let sql;
-  let params;
-
   const descripcion = `Archivo con datos de asistencia diaria. Actualizado el ${new Date().toLocaleString(
     "es-PE",
     { timeZone: "America/Lima" }
   )}`;
 
-  if (archivoExistente) {
-    // Actualizar registro existente
-    sql = `
-      UPDATE "T_Archivos_Respaldo_Google_Drive"
-      SET "Google_Drive_Id" = $1, 
-          "Descripcion" = $2,
-          "Ultima_Modificacion" = CURRENT_TIMESTAMP
-      WHERE "Id_Archivo_Respaldo" = $3
-      RETURNING *
-    `;
-    params = [googleDriveId, descripcion, archivoExistente.Id_Archivo_Respaldo];
-  } else {
-    // Crear nuevo registro
-    sql = `
-      INSERT INTO "T_Archivos_Respaldo_Google_Drive" 
-      ("Nombre_Archivo", "Google_Drive_Id", "Descripcion")
-      VALUES ($1, $2, $3)
-      RETURNING *
-    `;
-    params = [
-      NOMBRE_ARCHIVO_CON_DATOS_ASISTENCIA_DIARIOS,
-      googleDriveId,
-      descripcion,
-    ];
-  }
+  const sql = `
+    INSERT INTO "T_Archivos_Respaldo_Google_Drive" 
+    ("Nombre_Archivo", "Google_Drive_Id", "Descripcion")
+    VALUES ($1, $2, $3)
+    ON CONFLICT ("Nombre_Archivo") DO UPDATE 
+    SET 
+      "Google_Drive_Id" = $2,
+      "Descripcion" = $3,
+      "Ultima_Modificacion" = CURRENT_TIMESTAMP
+    RETURNING *
+  `;
 
-  const result = await query(sql, params);
-  return result.rows[0];
+  const params = [
+    NOMBRE_ARCHIVO_CON_DATOS_ASISTENCIA_DIARIOS,
+    googleDriveId,
+    descripcion,
+  ];
+
+  // Usar el db.query que automáticamente ejecuta escrituras en todas las instancias
+  return await RDP02_DB_INSTANCES.query(sql, params);
 }

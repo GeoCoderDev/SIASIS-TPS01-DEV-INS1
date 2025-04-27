@@ -121,16 +121,16 @@ function getRoleGroup(role?: RolesSistema): string | null {
 // Función para obtener una instancia aleatoria de todos los pools disponibles
 function getRandomPoolFromAll(): Pool {
   const allPools: Pool[] = [];
-  
+
   // Recopilar todos los pools de todos los grupos
   for (const groupName in postgresInstances) {
     allPools.push(...postgresInstances[groupName]);
   }
-  
+
   if (allPools.length === 0) {
     throw new Error("No hay instancias de PostgreSQL disponibles");
   }
-  
+
   const randomIndex = Math.floor(Math.random() * allPools.length);
   return allPools[randomIndex];
 }
@@ -141,7 +141,7 @@ function getRandomPool(group?: string): Pool {
   if (!group) {
     return getRandomPoolFromAll();
   }
-  
+
   const instances = postgresInstances[group];
   if (!instances || instances.length === 0) {
     throw new Error(`No hay instancias disponibles para el grupo: ${group}`);
@@ -178,15 +178,20 @@ async function executeOnAllInstances(
   maxRetries: number = 3
 ): Promise<any> {
   const allResults = [];
-  
+
   // Ejecutar en cada grupo
   for (const groupName in postgresInstances) {
-    const result = await executeOnAllInstancesInGroup(groupName, text, params, maxRetries);
+    const result = await executeOnAllInstancesInGroup(
+      groupName,
+      text,
+      params,
+      maxRetries
+    );
     if (result) {
       allResults.push(result);
     }
   }
-  
+
   // Retornar el primer resultado válido (para compatibilidad)
   return allResults.length > 0 ? allResults[0] : null;
 }
@@ -255,7 +260,7 @@ export async function query(
         const res = await client.query(text, params);
         const duration = Date.now() - start;
 
-        console.log(`Query ejecutada (${group || 'cualquier grupo'})`, {
+        console.log(`Query ejecutada (${group || "cualquier grupo"})`, {
           text: text.substring(0, 80) + (text.length > 80 ? "..." : ""),
           duration,
           filas: res.rowCount,
@@ -279,7 +284,9 @@ export async function query(
       lastError = error;
       retries++;
       console.error(
-        `Error en intento ${retries}/${maxRetries} (${group || 'cualquier grupo'}):`,
+        `Error en intento ${retries}/${maxRetries} (${
+          group || "cualquier grupo"
+        }):`,
         error
       );
 
@@ -293,7 +300,9 @@ export async function query(
   }
 
   console.error(
-    `Error en consulta SQL después de todos los reintentos (${group || 'cualquier grupo'}):`,
+    `Error en consulta SQL después de todos los reintentos (${
+      group || "cualquier grupo"
+    }):`,
     lastError
   );
   throw lastError;
@@ -311,7 +320,7 @@ async function executeOnAllInstancesInGroup(
     console.warn(`No hay instancias disponibles para el grupo: ${group}`);
     return null;
   }
-  
+
   const results = [];
 
   for (const pool of instances) {
@@ -415,7 +424,9 @@ const defaultQuery = async (
   }
 };
 
-export default {
+const RDP02_DB_INSTANCES = {
   query: defaultQuery,
   closePool,
 };
+
+export default RDP02_DB_INSTANCES;
