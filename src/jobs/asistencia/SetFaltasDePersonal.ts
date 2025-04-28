@@ -24,6 +24,7 @@ async function main() {
       RolesSistema.Responsable,
       RolesSistema.PersonalAdministrativo,
     ];
+    
 
     // Bloquear todos los roles al inicio
     try {
