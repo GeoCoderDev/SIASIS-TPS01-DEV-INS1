@@ -135,7 +135,59 @@ export async function obtenerProfesoresSecundariaParaTomarAsistencia(
       enSemanaGestion,
     });
 
+    // Obtener el día de la semana correctamente, considerando que la fecha puede estar en UTC
+    // 1. Extraer componentes individuales como año, mes, día de la fecha UTC
+    const añoUTC = fecha.getUTCFullYear();
+    const mesUTC = fecha.getUTCMonth();
+    const diaUTC = fecha.getUTCDate();
+
+    // 2. Crear una nueva fecha local con estos componentes para eliminar cualquier problema de zona horaria
+    const fechaLocal = new Date(añoUTC, mesUTC, diaUTC, 12, 0, 0); // Usamos mediodía para evitar problemas con cambios de día por zona horaria
+
+    // 3. Obtener el día de la semana de esta fecha local
+    const diaSemana = fechaLocal.getDay(); // 0-6, 0 siendo domingo
+
+    // 4. Convertir para el formato BD (1-7, donde 1 es lunes y 7 es domingo)
+    const diaSemanaDB = diaSemana === 0 ? 7 : diaSemana;
+
+    console.log(`Fecha analizada: ${fechaLocal.toDateString()}`);
+    console.log(`Día de la semana (0-6): ${diaSemana}`);
+    console.log(`Día de la semana para BD (1-7): ${diaSemanaDB}`);
+
+    // IMPORTANTE: Siempre obtenemos SOLO profesores que tienen cursos para ese día,
+    // independientemente de si estamos en período especial o no
+    const profesoresQuery = `
+      SELECT 
+        ps."DNI_Profesor_Secundaria", 
+        ps."Nombres", 
+        ps."Apellidos", 
+        ps."Genero", 
+        ps."Google_Drive_Foto_ID",
+        MIN(ch."Indice_Hora_Academica_Inicio") as "Indice_Entrada",
+        MAX(ch."Indice_Hora_Academica_Inicio" + ch."Cant_Hora_Academicas") as "Indice_Salida"
+      FROM "T_Profesores_Secundaria" ps
+      JOIN "T_Cursos_Horario" ch ON ps."DNI_Profesor_Secundaria" = ch."DNI_Profesor_Secundaria"
+      WHERE ps."Estado" = true AND ch."Dia_Semana" = $1
+      GROUP BY ps."DNI_Profesor_Secundaria", ps."Nombres", ps."Apellidos", ps."Genero", ps."Google_Drive_Foto_ID"
+    `;
+
+    const profesoresResult = await RDP02_DB_INSTANCES.query(profesoresQuery, [
+      diaSemanaDB,
+    ]);
+    console.log(
+      `Encontrados ${profesoresResult.rows.length} profesores con cursos para el día ${diaSemanaDB}`
+    );
+
+    // Si no hay profesores con cursos este día, retornar array vacío
+    if (profesoresResult.rows.length === 0) {
+      console.log(
+        "No se encontraron profesores con cursos para este día. Retornando array vacío."
+      );
+      return [];
+    }
+
     // Si estamos en un periodo especial (vacaciones o semana de gestión)
+    // Sobrescribimos los horarios, pero mantenemos la misma lista de profesores
     if (enVacacionesInterescolares || enSemanaGestion) {
       let horaInicioStr: string | null = null;
       let horaFinStr: string | null = null;
@@ -188,29 +240,6 @@ export async function obtenerProfesoresSecundariaParaTomarAsistencia(
         horaFinStr = "13:00:00"; // 1:00 PM predeterminado para periodos especiales
       }
 
-      // Obtener TODOS los profesores secundaria activos (en periodos especiales todos asisten)
-      const profesoresQuery = `
-        SELECT 
-          ps."DNI_Profesor_Secundaria", 
-          ps."Nombres", 
-          ps."Apellidos", 
-          ps."Genero", 
-          ps."Google_Drive_Foto_ID"
-        FROM "T_Profesores_Secundaria" ps
-        WHERE ps."Estado" = true
-      `;
-
-      const profesoresResult = await RDP02_DB_INSTANCES.query(profesoresQuery);
-      console.log(
-        `Encontrados ${profesoresResult.rows.length} profesores de secundaria activos para ${periodoTipo}`
-      );
-
-      // Si no hay profesores, devolvemos array vacío
-      if (!profesoresResult.rows.length) {
-        console.log("No se encontraron profesores de secundaria activos");
-        return [];
-      }
-
       // Extraer solo la fecha (YYYY-MM-DD) de fecha
       const fechaString = fecha.toISOString().split("T")[0];
 
@@ -218,12 +247,14 @@ export async function obtenerProfesoresSecundariaParaTomarAsistencia(
       const horaEntradaISO = new Date(`${fechaString}T${horaInicioStr}.000Z`);
       const horaSalidaISO = new Date(`${fechaString}T${horaFinStr}.000Z`);
 
-      console.log(`Horarios generados para período ${periodoTipo}:`, {
+      console.log(`Horarios especiales generados para período ${periodoTipo}:`, {
         entrada: horaEntradaISO.toISOString(),
         salida: horaSalidaISO.toISOString(),
       });
 
-      // Crear horarios especiales para todos los profesores
+      // Asignar horarios especiales a los profesores con cursos este día
+      console.log(`Aplicando horarios especiales de ${periodoTipo} a los profesores con cursos este día`);
+      
       return profesoresResult.rows.map((profesor: any) => ({
         DNI_Profesor_Secundaria: profesor.DNI_Profesor_Secundaria,
         Nombres: profesor.Nombres,
@@ -237,26 +268,7 @@ export async function obtenerProfesoresSecundariaParaTomarAsistencia(
     }
 
     // Si NO estamos en período especial, continuamos con la lógica normal
-    // Aquí SOLO debemos devolver profesores que tengan cursos asignados este día
-
-    // Obtener el día de la semana correctamente, considerando que la fecha puede estar en UTC
-    // 1. Extraer componentes individuales como año, mes, día de la fecha UTC
-    const añoUTC = fecha.getUTCFullYear();
-    const mesUTC = fecha.getUTCMonth();
-    const diaUTC = fecha.getUTCDate();
-
-    // 2. Crear una nueva fecha local con estos componentes para eliminar cualquier problema de zona horaria
-    const fechaLocal = new Date(añoUTC, mesUTC, diaUTC, 12, 0, 0); // Usamos mediodía para evitar problemas con cambios de día por zona horaria
-
-    // 3. Obtener el día de la semana de esta fecha local
-    const diaSemana = fechaLocal.getDay(); // 0-6, 0 siendo domingo
-
-    // 4. Convertir para el formato BD (1-7, donde 1 es lunes y 7 es domingo)
-    const diaSemanaDB = diaSemana === 0 ? 7 : diaSemana;
-
-    console.log(`Fecha analizada: ${fechaLocal.toDateString()}`);
-    console.log(`Día de la semana (0-6): ${diaSemana}`);
-    console.log(`Día de la semana para BD (1-7): ${diaSemanaDB}`);
+    // para calcular los horarios basados en los índices de entrada/salida
 
     // 1. Obtener los ajustes del sistema para el recreo
     const ajustesQuery = `
@@ -306,39 +318,7 @@ export async function obtenerProfesoresSecundariaParaTomarAsistencia(
 
     console.log(`Hora inicio base: ${horaInicio.toISOString()}`);
 
-    // 3. Obtener SOLO profesores que tienen cursos asignados este día
-    const profesoresQuery = `
-      SELECT 
-        ps."DNI_Profesor_Secundaria", 
-        ps."Nombres", 
-        ps."Apellidos", 
-        ps."Genero", 
-        ps."Google_Drive_Foto_ID",
-        MIN(ch."Indice_Hora_Academica_Inicio") as "Indice_Entrada",
-        MAX(ch."Indice_Hora_Academica_Inicio" + ch."Cant_Hora_Academicas") as "Indice_Salida"
-      FROM "T_Profesores_Secundaria" ps
-      JOIN "T_Cursos_Horario" ch ON ps."DNI_Profesor_Secundaria" = ch."DNI_Profesor_Secundaria"
-      WHERE ps."Estado" = true AND ch."Dia_Semana" = $1
-      GROUP BY ps."DNI_Profesor_Secundaria", ps."Nombres", ps."Apellidos", ps."Genero", ps."Google_Drive_Foto_ID"
-    `;
-
-    const profesoresResult = await RDP02_DB_INSTANCES.query(profesoresQuery, [
-      diaSemanaDB,
-    ]);
-    console.log(
-      `Encontrados ${profesoresResult.rows.length} profesores con cursos para el día ${diaSemanaDB}`
-    );
-
-    // Si no hay profesores con cursos este día, retornar array vacío
-    // IMPORTANTE: Como solicitaste, en días normales SOLO devolvemos profesores con cursos asignados
-    if (profesoresResult.rows.length === 0) {
-      console.log(
-        "No se encontraron profesores con cursos para este día. Retornando array vacío."
-      );
-      return [];
-    }
-
-    // 4. Convertir resultados a objetos con horarios calculados
+    // 3. Convertir resultados a objetos con horarios calculados
     return profesoresResult.rows.map((profesor: any) => {
       try {
         console.log(
@@ -380,7 +360,7 @@ export async function obtenerProfesoresSecundariaParaTomarAsistencia(
         );
 
         console.log(
-          `Horarios calculados para ${profesor.DNI_Profesor_Secundaria}:`,
+          `Horarios normales calculados para ${profesor.DNI_Profesor_Secundaria}:`,
           {
             entrada: horaEntrada.toISOString(),
             salida: horaSalida.toISOString(),
