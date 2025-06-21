@@ -85,8 +85,8 @@ export async function obtenerPersonalActivoDesdeJSON(
       campoId: "Id_C_E_M_P_Administrativo",
       campoDNI: "DNI_Personal_Administrativo",
       nombreCompleto: `${personal.Nombres} ${personal.Apellidos}`,
-      horaEntradaEsperada: String(personal.Horario_Laboral_Entrada),
-      horaSalidaEsperada: String(personal.Horario_Laboral_Salida),
+      horaEntradaEsperada: String(personal.Hora_Entrada_Dia_Actual),
+      horaSalidaEsperada: String(personal.Hora_Salida_Dia_Actual),
     });
   });
 

@@ -102,7 +102,6 @@ async function generarDatosAsistenciaDiaria(): Promise<DatosAsistenciaHoyIE20935
     ListaDePersonalesAdministrativos: personalAdministrativo,
     ListaDeProfesoresPrimaria: profesoresPrimaria,
     ListaDeProfesoresSecundaria: profesoresSecundaria,
-    // 🆕 NUEVA PROPIEDAD PARA DIRECTIVOS
     ListaDeDirectivos: directivos,
     HorariosLaboraresGenerales: horariosGenerales,
     HorariosEscolares: horariosEscolares,
