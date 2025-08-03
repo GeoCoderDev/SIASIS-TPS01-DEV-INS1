@@ -97,7 +97,7 @@ export async function obtenerDirectivosParaTomarAsistencia(
     const sql = `
       SELECT 
         d."Id_Directivo",
-        d."DNI", 
+        d."Identificador_Nacional", 
         d."Genero", 
         d."Nombres", 
         d."Apellidos", 
@@ -121,13 +121,13 @@ export async function obtenerDirectivosParaTomarAsistencia(
       "Datos brutos de horarios laborales de directivos:",
       result.rows.map(
         (r: {
-          Id_Directivo: any;
-          DNI: any;
+          Id_Directivo: number;
+          Identificador_Nacional: string;
           Horario_Laboral_Entrada: any;
           Horario_Laboral_Salida: any;
         }) => ({
           id: r.Id_Directivo,
-          dni: r.DNI,
+          identificadorNacional: r.Identificador_Nacional,
           entrada: r.Horario_Laboral_Entrada,
           salida: r.Horario_Laboral_Salida,
         })
@@ -178,7 +178,7 @@ export async function obtenerDirectivosParaTomarAsistencia(
 
         return {
           Id_Directivo: row.Id_Directivo,
-          DNI: row.DNI,
+          Identificador_Nacional: row.Identificador_Nacional,
           Genero: row.Genero,
           Nombres: row.Nombres,
           Apellidos: row.Apellidos,
@@ -196,7 +196,7 @@ export async function obtenerDirectivosParaTomarAsistencia(
 
         return {
           Id_Directivo: row.Id_Directivo,
-          DNI: row.DNI,
+          Identificador_Nacional: row.Identificador_Nacional,
           Genero: row.Genero,
           Nombres: row.Nombres,
           Apellidos: row.Apellidos,

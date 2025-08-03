@@ -125,7 +125,7 @@ export async function obtenerPersonalAdministrativoParaTomarAsistencia(
           Horario_Laboral_Entrada: any;
           Horario_Laboral_Salida: any;
         }) => ({
-          dni: r.Id_Personal_Administrativo,
+          id: r.Id_Personal_Administrativo,
           entrada: r.Horario_Laboral_Entrada,
           salida: r.Horario_Laboral_Salida,
         })
