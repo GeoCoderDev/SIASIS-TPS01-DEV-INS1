@@ -28,7 +28,7 @@ export async function obtenerPersonalInactivoParaRegistroAutomatico(): Promise<
   if (tablasExistentes.includes("T_Auxiliares")) {
     try {
       const sqlAuxiliares = `
-        SELECT "DNI_Auxiliar" as dni
+        SELECT "Id_Auxiliar" as dni
         FROM "T_Auxiliares"
         WHERE "Estado" = false
       `;
@@ -41,7 +41,7 @@ export async function obtenerPersonalInactivoParaRegistroAutomatico(): Promise<
           tablaMensualEntrada: "t_Control_Entrada_Mensual_Auxiliar",
           tablaMensualSalida: "t_Control_Salida_Mensual_Auxiliar",
           campoId: "Id_C_E_M_P_Auxiliar",
-          campoDNI: "DNI_Auxiliar",
+          campoDNI: "Id_Auxiliar",
         });
       });
     } catch (error) {
@@ -53,7 +53,7 @@ export async function obtenerPersonalInactivoParaRegistroAutomatico(): Promise<
   if (tablasExistentes.includes("T_Profesores_Primaria")) {
     try {
       const sqlProfesoresPrimaria = `
-        SELECT "DNI_Profesor_Primaria" as dni
+        SELECT "Id_Profesor_Primaria" as dni
         FROM "T_Profesores_Primaria"
         WHERE "Estado" = false
       `;
@@ -66,7 +66,7 @@ export async function obtenerPersonalInactivoParaRegistroAutomatico(): Promise<
           tablaMensualEntrada: "t_Control_Entrada_Mensual_Profesores_Primaria",
           tablaMensualSalida: "t_Control_Salida_Mensual_Profesores_Primaria",
           campoId: "Id_C_E_M_P_Profesores_Primaria",
-          campoDNI: "DNI_Profesor_Primaria",
+          campoDNI: "Id_Profesor_Primaria",
         });
       });
     } catch (error) {
@@ -78,7 +78,7 @@ export async function obtenerPersonalInactivoParaRegistroAutomatico(): Promise<
   if (tablasExistentes.includes("T_Profesores_Secundaria")) {
     try {
       const sqlProfesoresSecundaria = `
-        SELECT "DNI_Profesor_Secundaria" as dni
+        SELECT "Id_Profesor_Secundaria" as dni
         FROM "T_Profesores_Secundaria"
         WHERE "Estado" = false
       `;
@@ -94,7 +94,7 @@ export async function obtenerPersonalInactivoParaRegistroAutomatico(): Promise<
             "t_Control_Entrada_Mensual_Profesores_Secundaria",
           tablaMensualSalida: "t_Control_Salida_Mensual_Profesores_Secundaria",
           campoId: "Id_C_E_M_P_Profesores_Secundaria",
-          campoDNI: "DNI_Profesor_Secundaria",
+          campoDNI: "Id_Profesor_Secundaria",
         });
       });
     } catch (error) {
@@ -109,7 +109,7 @@ export async function obtenerPersonalInactivoParaRegistroAutomatico(): Promise<
   if (tablasExistentes.includes("T_Personal_Administrativo")) {
     try {
       const sqlPersonalAdministrativo = `
-        SELECT "DNI_Personal_Administrativo" as dni
+        SELECT "Id_Personal_Administrativo" as dni
         FROM "T_Personal_Administrativo"
         WHERE "Estado" = false
       `;
@@ -126,7 +126,7 @@ export async function obtenerPersonalInactivoParaRegistroAutomatico(): Promise<
           tablaMensualSalida:
             "t_Control_Salida_Mensual_Personal_Administrativo",
           campoId: "Id_C_E_M_P_Administrativo",
-          campoDNI: "DNI_Personal_Administrativo",
+          campoDNI: "Id_Personal_Administrativo",
         });
       });
     } catch (error) {

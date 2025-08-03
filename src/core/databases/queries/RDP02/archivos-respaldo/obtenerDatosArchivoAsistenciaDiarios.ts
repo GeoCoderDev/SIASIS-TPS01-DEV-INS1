@@ -60,7 +60,7 @@ export async function obtenerPersonalActivoDesdeJSON(
       });
 
       console.log(
-        `✅ Directivo agregado: ${directivo.Nombres} ${directivo.Apellidos} (DNI: ${directivo.DNI} → Id: ${directivo.Id_Directivo})`
+        `✅ Directivo agregado: ${directivo.Nombres} ${directivo.Apellidos} (DNI: ${directivo.Identificador_Nacional} → Id: ${directivo.Id_Directivo})`
       );
     }
   } else {
@@ -77,12 +77,12 @@ export async function obtenerPersonalActivoDesdeJSON(
     );
     datosAsistencia.ListaDeAuxiliares.forEach((auxiliar) => {
       personalActivo.push({
-        id_o_dni: auxiliar.DNI_Auxiliar,
+        id_o_dni: auxiliar.Id_Auxiliar,
         rol: RolesSistema.Auxiliar,
         tablaMensualEntrada: "T_Control_Entrada_Mensual_Auxiliar",
         tablaMensualSalida: "T_Control_Salida_Mensual_Auxiliar",
         campoId: "Id_C_E_M_P_Auxiliar",
-        campoID_o_DNI: "DNI_Auxiliar",
+        campoID_o_DNI: "Id_Auxiliar",
         nombreCompleto: `${auxiliar.Nombres} ${auxiliar.Apellidos}`,
       });
     });
@@ -98,12 +98,12 @@ export async function obtenerPersonalActivoDesdeJSON(
     );
     datosAsistencia.ListaDeProfesoresPrimaria.forEach((profesor) => {
       personalActivo.push({
-        id_o_dni: profesor.DNI_Profesor_Primaria,
+        id_o_dni: profesor.Id_Profesor_Primaria,
         rol: RolesSistema.ProfesorPrimaria,
         tablaMensualEntrada: "T_Control_Entrada_Mensual_Profesores_Primaria",
         tablaMensualSalida: "T_Control_Salida_Mensual_Profesores_Primaria",
         campoId: "Id_C_E_M_P_Profesores_Primaria",
-        campoID_o_DNI: "DNI_Profesor_Primaria",
+        campoID_o_DNI: "Id_Profesor_Primaria",
         nombreCompleto: `${profesor.Nombres} ${profesor.Apellidos}`,
       });
     });
@@ -119,12 +119,12 @@ export async function obtenerPersonalActivoDesdeJSON(
     );
     datosAsistencia.ListaDeProfesoresSecundaria.forEach((profesor) => {
       personalActivo.push({
-        id_o_dni: profesor.DNI_Profesor_Secundaria,
+        id_o_dni: profesor.Id_Profesor_Secundaria,
         rol: RolesSistema.ProfesorSecundaria,
         tablaMensualEntrada: "T_Control_Entrada_Mensual_Profesores_Secundaria",
         tablaMensualSalida: "T_Control_Salida_Mensual_Profesores_Secundaria",
         campoId: "Id_C_E_M_P_Profesores_Secundaria",
-        campoID_o_DNI: "DNI_Profesor_Secundaria",
+        campoID_o_DNI: "Id_Profesor_Secundaria",
         nombreCompleto: `${profesor.Nombres} ${profesor.Apellidos}`,
         horaEntradaEsperada: String(profesor.Hora_Entrada_Dia_Actual),
         horaSalidaEsperada: String(profesor.Hora_Salida_Dia_Actual),
@@ -142,13 +142,13 @@ export async function obtenerPersonalActivoDesdeJSON(
     );
     datosAsistencia.ListaDePersonalesAdministrativos.forEach((personal) => {
       personalActivo.push({
-        id_o_dni: personal.DNI_Personal_Administrativo,
+        id_o_dni: personal.Id_Personal_Administrativo,
         rol: RolesSistema.PersonalAdministrativo,
         tablaMensualEntrada:
           "T_Control_Entrada_Mensual_Personal_Administrativo",
         tablaMensualSalida: "T_Control_Salida_Mensual_Personal_Administrativo",
         campoId: "Id_C_E_M_P_Administrativo",
-        campoID_o_DNI: "DNI_Personal_Administrativo",
+        campoID_o_DNI: "Id_Personal_Administrativo",
         nombreCompleto: `${personal.Nombres} ${personal.Apellidos}`,
         horaEntradaEsperada: String(personal.Hora_Entrada_Dia_Actual),
         horaSalidaEsperada: String(personal.Hora_Salida_Dia_Actual),

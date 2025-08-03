@@ -52,7 +52,7 @@ function obtenerConfiguracionTabla(
         tabla: esEntrada
           ? "T_Control_Entrada_Mensual_Profesores_Primaria"
           : "T_Control_Salida_Mensual_Profesores_Primaria",
-        campoDNI: "DNI_Profesor_Primaria",
+        campoDNI: "Id_Profesor_Primaria",
         campoJSON: esEntrada ? "Entradas" : "Salidas",
       };
 
@@ -62,7 +62,7 @@ function obtenerConfiguracionTabla(
         tabla: esEntrada
           ? "T_Control_Entrada_Mensual_Profesores_Secundaria"
           : "T_Control_Salida_Mensual_Profesores_Secundaria",
-        campoDNI: "DNI_Profesor_Secundaria",
+        campoDNI: "Id_Profesor_Secundaria",
         campoJSON: esEntrada ? "Entradas" : "Salidas",
       };
 
@@ -71,7 +71,7 @@ function obtenerConfiguracionTabla(
         tabla: esEntrada
           ? "T_Control_Entrada_Mensual_Auxiliar"
           : "T_Control_Salida_Mensual_Auxiliar",
-        campoDNI: "DNI_Auxiliar",
+        campoDNI: "Id_Auxiliar",
         campoJSON: esEntrada ? "Entradas" : "Salidas",
       };
 
@@ -80,7 +80,7 @@ function obtenerConfiguracionTabla(
         tabla: esEntrada
           ? "T_Control_Entrada_Mensual_Personal_Administrativo"
           : "T_Control_Salida_Mensual_Personal_Administrativo",
-        campoDNI: "DNI_Personal_Administrativo",
+        campoDNI: "Id_Personal_Administrativo",
         campoJSON: esEntrada ? "Entradas" : "Salidas",
       };
 
@@ -166,13 +166,13 @@ async function registrarAsistenciaConValoresPersonalizados(
           registro[idKey],
         ]);
 
-        const tipoIdentificador = esDirectivo ? "Id_Directivo" : "DNI";
+        const tipoIdentificador = esDirectivo ? "Id_Directivo" : "Identificador_Nacional";
         return {
           exito: true,
           mensaje: `Registro actualizado para ${tipoIdentificador} ${identificador} en día ${dia}`,
         };
       } else {
-        const tipoIdentificador = esDirectivo ? "Id_Directivo" : "DNI";
+        const tipoIdentificador = esDirectivo ? "Id_Directivo" : "Identificador_Nacional";
         return {
           exito: false,
           mensaje: `Registro ya existe para ${tipoIdentificador} ${identificador} en día ${dia}, manteniendo el existente`,
@@ -194,7 +194,7 @@ async function registrarAsistenciaConValoresPersonalizados(
         JSON.stringify(nuevoJson),
       ]);
 
-      const tipoIdentificador = esDirectivo ? "Id_Directivo" : "DNI";
+      const tipoIdentificador = esDirectivo ? "Id_Directivo" : "Identificador_Nacional";
       return {
         exito: true,
         mensaje: `Nuevo registro creado para ${tipoIdentificador} ${identificador} en mes ${mes}`,
