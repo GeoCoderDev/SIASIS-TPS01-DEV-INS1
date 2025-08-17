@@ -2,9 +2,9 @@ import { T_Vacaciones_Interescolares } from "@prisma/client";
 import { DURACION_HORA_ACADEMICA_EN_MINUTOS } from "../../../../../constants/DURACION_HORA_ACADEMICA_EN_MINUTOS";
 import { ProfesorTutorSecundariaParaTomaDeAsistencia } from "../../../../../interfaces/shared/Asistencia/DatosAsistenciaHoyIE20935";
 import { extraerHora } from "../../../../utils/dates/modificacionFechas";
-import { verificarDentroSemanaGestion } from "../../../../utils/verificators/verificarDentroSemanaGestion";
-import { verificarDentroVacacionesInterescolares } from "../../../../utils/verificators/verificarDentroVacacionesInterescolares";
 import RDP02_DB_INSTANCES from "../../../connectors/postgres";
+import { verificarDentroSemanaGestion } from "../../../../utils/helpers/verificators/verificarDentroSemanaGestion";
+import { verificarDentroVacacionesInterescolares } from "../../../../utils/helpers/verificators/verificarDentroVacacionesInterescolares";
 
 /**
  * Calcula el horario considerando los recreos
@@ -247,14 +247,19 @@ export async function obtenerProfesoresSecundariaParaTomarAsistencia(
       const horaEntradaISO = new Date(`${fechaString}T${horaInicioStr}.000Z`);
       const horaSalidaISO = new Date(`${fechaString}T${horaFinStr}.000Z`);
 
-      console.log(`Horarios especiales generados para período ${periodoTipo}:`, {
-        entrada: horaEntradaISO.toISOString(),
-        salida: horaSalidaISO.toISOString(),
-      });
+      console.log(
+        `Horarios especiales generados para período ${periodoTipo}:`,
+        {
+          entrada: horaEntradaISO.toISOString(),
+          salida: horaSalidaISO.toISOString(),
+        }
+      );
 
       // Asignar horarios especiales a los profesores con cursos este día
-      console.log(`Aplicando horarios especiales de ${periodoTipo} a los profesores con cursos este día`);
-      
+      console.log(
+        `Aplicando horarios especiales de ${periodoTipo} a los profesores con cursos este día`
+      );
+
       return profesoresResult.rows.map((profesor: any) => ({
         Id_Profesor_Secundaria: profesor.Id_Profesor_Secundaria,
         Nombres: profesor.Nombres,

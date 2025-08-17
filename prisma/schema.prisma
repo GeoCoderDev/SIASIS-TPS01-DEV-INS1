@@ -548,3 +548,16 @@ model T_Vacaciones_Interescolares {
 
   @@map("T_Vacaciones_Interescolares")
 }
+
+model T_Modificaciones_Especificas {
+  Id_Modificacion_Especifica     String    @id @db.VarChar(100)   @default(uuid())
+  Nombre_Tabla                   String   @db.Text
+  Campos_Identificadores         String   @db.Text //Separados por comas
+  Valores_Campos_Identificadores String   @db.Text //Separados por comas
+  Id_Registro_Modificado         String   @db.Text
+  Fecha_Modificacion             DateTime @default(now())
+  Ultima_Operacion               String   // INSERT, UPDATE, DELETE
+  Contador_Modificaciones        Int      @default(1)
+
+  @@map("T_Modificaciones_Especificas")
+}

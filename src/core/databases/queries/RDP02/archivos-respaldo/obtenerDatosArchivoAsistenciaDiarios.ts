@@ -4,7 +4,7 @@ import { RolesSistema } from "../../../../../interfaces/shared/RolesSistema";
 import RDP02_DB_INSTANCES from "../../../connectors/postgres";
 import { PersonalActivo } from "../personales-para-toma-asistencia/verificarYRegistrarAsistenciasIncompletas";
 
-export async function obtenerUltimoArchivoAsistencia(): Promise<string> {
+export async function obtenerUltimoArchivoDatosAsistenciaHoy(): Promise<string> {
   try {
     const sql = `
       SELECT "Google_Drive_Id"
@@ -28,7 +28,6 @@ export async function obtenerUltimoArchivoAsistencia(): Promise<string> {
     throw error;
   }
 }
-
 
 export async function obtenerPersonalActivoDesdeJSON(
   datosAsistencia: DatosAsistenciaHoyIE20935
