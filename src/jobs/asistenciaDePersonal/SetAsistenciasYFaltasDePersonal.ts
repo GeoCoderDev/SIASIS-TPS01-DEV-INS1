@@ -13,6 +13,8 @@ import { obtenerFechasActuales } from "../../core/utils/dates/obtenerFechasActua
 import { RolesSistema } from "../../interfaces/shared/RolesSistema";
 import { verificarDiaEvento } from "../../core/databases/queries/RDP02/eventos/verificarDiaEvento";
 import { DatosAsistenciaHoyIE20935 } from "../../interfaces/shared/Asistencia/DatosAsistenciaHoyIE20935";
+import { obtenerFechasAñoEscolar } from "../../core/databases/queries/RDP02/fechas-importantes/obtenerFechasAñoEscolar";
+import verificarFueraAñoEscolar from "../../core/utils/helpers/verificators/verificarDentroAñoEscolar";
 
 // ========================================================
 // FUNCIÓN PRINCIPAL
@@ -20,6 +22,8 @@ import { DatosAsistenciaHoyIE20935 } from "../../interfaces/shared/Asistencia/Da
 
 async function main() {
   try {
+
+
     console.log(
       "🚀 Iniciando verificación de asistencias incompletas y procesamiento de registros Redis..."
     );

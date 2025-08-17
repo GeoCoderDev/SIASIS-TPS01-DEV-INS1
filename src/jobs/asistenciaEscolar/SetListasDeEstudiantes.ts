@@ -24,6 +24,8 @@ import { ListaEstudiantesPorGradoParaHoy } from "../../interfaces/shared/Asisten
 import { NivelEducativo } from "../../interfaces/shared/NivelEducativo";
 import { generarNombreArchivo } from "../../core/utils/helpers/generators/generarNombreArchivoJSONListaEstudiantes";
 import { obtenerFechasActuales } from "../../core/utils/dates/obtenerFechasActuales";
+import verificarFueraAñoEscolar from "../../core/utils/helpers/verificators/verificarDentroAñoEscolar";
+import { obtenerFechasAñoEscolar } from "../../core/databases/queries/RDP02/fechas-importantes/obtenerFechasAñoEscolar";
 
 /**
  * Verifica si hay modificaciones para una combinación específica de nivel y grado
@@ -33,8 +35,6 @@ function buscarModificacionParaNivelYGrado<T extends NivelEducativo>(
   nivel: T,
   grado: T extends NivelEducativo.PRIMARIA ? GradosPrimaria : GradosSecundaria
 ): T_Modificaciones_Especificas | undefined {
-
-
   return modificaciones.find(
     (m) => m.Valores_Campos_Identificadores === `${nivel},${grado}`
   );
@@ -199,6 +199,28 @@ async function procesarNivelYGrado<T extends NivelEducativo>(
  */
 async function main() {
   try {
+    // Obtener fechas actuales
+    const { fechaLocalPeru } = obtenerFechasActuales();
+
+    // Verificar si es día de evento
+
+    // Obtener fechas del año escolar
+    const fechasAñoEscolar = await obtenerFechasAñoEscolar();
+
+    // Verificar si estamos dentro del año escolar
+    const fueraAñoEscolar = verificarFueraAñoEscolar(
+      fechaLocalPeru,
+      fechasAñoEscolar.Inicio_Año_Escolar,
+      fechasAñoEscolar.Fin_Año_Escolar
+    );
+
+    if (fueraAñoEscolar) {
+      console.log(
+        "🚫 Fuera del año escolar, no se procesará la actualización de registros de listas de estudiantes."
+      );
+      return;
+    }
+
     console.log(
       "🚀 Iniciando sistema de actualización de listas de estudiantes..."
     );
