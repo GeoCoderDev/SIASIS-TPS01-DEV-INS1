@@ -26,6 +26,45 @@ import { generarNombreArchivo } from "../../core/utils/helpers/generators/genera
 import { obtenerFechasActuales } from "../../core/utils/dates/obtenerFechasActuales";
 import verificarFueraAñoEscolar from "../../core/utils/helpers/verificators/verificarDentroAñoEscolar";
 import { obtenerFechasAñoEscolar } from "../../core/databases/queries/RDP02/fechas-importantes/obtenerFechasAñoEscolar";
+import { NOMBRE_ARCHIVO_REPORTE_ACTUALIZACION_DE_LISTAS_DE_ESTUDIANTES } from "../../constants/NOMBRE_ARCHIVOS_SISTEMA";
+import { ReporteActualizacionDeListasEstudiantes } from "../../interfaces/shared/Asistencia/ReporteModificacionesListasDeEstudiantes";
+
+/**
+ * Inicializa el reporte con todos los archivos de estudiantes y fechas por defecto
+ */
+function inicializarReporteActualizacion(
+  fechaActual: Date
+): ReporteActualizacionDeListasEstudiantes {
+  // Crear objeto con todas las propiedades requeridas por el tipo
+  const estadoInicial = {} as Record<string, Date>;
+
+  // Agregar todos los archivos de PRIMARIA
+  for (const grado of Object.values(GradosPrimaria)) {
+    if (typeof grado === "number") {
+      const nombreArchivo = generarNombreArchivo(
+        NivelEducativo.PRIMARIA,
+        grado as GradosPrimaria
+      );
+      estadoInicial[nombreArchivo] = fechaActual; // Fecha por defecto
+    }
+  }
+
+  // Agregar todos los archivos de SECUNDARIA
+  for (const grado of Object.values(GradosSecundaria)) {
+    if (typeof grado === "number") {
+      const nombreArchivo = generarNombreArchivo(
+        NivelEducativo.SECUNDARIA,
+        grado as GradosSecundaria
+      );
+      estadoInicial[nombreArchivo] = fechaActual; // Fecha por defecto
+    }
+  }
+
+  return {
+    EstadoDeListasDeEstudiantes: estadoInicial as any, // Cast necesario para satisfacer TypeScript
+    Fecha_Actualizacion: fechaActual,
+  };
+}
 
 /**
  * Verifica si hay modificaciones para una combinación específica de nivel y grado
@@ -59,8 +98,9 @@ async function procesarNivelYGrado<T extends NivelEducativo>(
   nivel: T,
   grado: T extends NivelEducativo.PRIMARIA ? GradosPrimaria : GradosSecundaria,
   modificaciones: T_Modificaciones_Especificas[],
-  archivosExistentes: T_Archivos_Respaldo_Google_Drive[]
-): Promise<void> {
+  archivosExistentes: T_Archivos_Respaldo_Google_Drive[],
+  estadoReporte: Record<string, Date>
+): Promise<boolean> {
   try {
     console.log(`\n🔄 Procesando ${nivel} - Grado ${grado}`);
 
@@ -82,6 +122,7 @@ async function procesarNivelYGrado<T extends NivelEducativo>(
     );
 
     let debeActualizar = false;
+    let fechaParaReporte = fechaUTC; // Por defecto, usar fecha actual
     let estudiantes: T_Estudiantes[] = [];
     let aulas: T_Aulas[] = [];
 
@@ -140,12 +181,12 @@ async function procesarNivelYGrado<T extends NivelEducativo>(
             aulas = await obtenerAulasPorGradoYNivel(nivel, grado);
           } else {
             console.log(
-              `✅ Archivo existente está actualizado, usando datos existentes`
+              `✅ Archivo existente está actualizado, no se requiere actualización`
             );
-            debeActualizar = true; // Aún necesitamos actualizar la fecha
+            debeActualizar = false;
 
-            estudiantes = datosExistentes.ListaEstudiantes;
-            aulas = await obtenerAulasPorGradoYNivel(nivel, grado); // Siempre consultar aulas actuales
+            // Usar la fecha del archivo existente para el reporte
+            fechaParaReporte = fechaArchivoExistente;
           }
         } catch (downloadError) {
           console.error(
@@ -185,9 +226,17 @@ async function procesarNivelYGrado<T extends NivelEducativo>(
       await actualizarArchivoRespaldoEnGoogleDrive(nombreArchivo, listaFinal);
 
       console.log(`✅ ${nombreArchivo} actualizado correctamente`);
+
+      // Actualizar fecha en el reporte con la nueva fecha
+      estadoReporte[nombreArchivo] = fechaUTC;
     } else {
       console.log(`⏭️ ${nombreArchivo} no requiere actualización`);
+
+      // Actualizar fecha en el reporte con la fecha existente
+      estadoReporte[nombreArchivo] = fechaParaReporte;
     }
+
+    return debeActualizar;
   } catch (error) {
     console.error(`❌ Error procesando ${nivel} grado ${grado}:`, error);
     throw error;
@@ -200,14 +249,10 @@ async function procesarNivelYGrado<T extends NivelEducativo>(
 async function main() {
   try {
     // Obtener fechas actuales
-    const { fechaLocalPeru } = obtenerFechasActuales();
-
-    // Verificar si es día de evento
-
-    // Obtener fechas del año escolar
-    const fechasAñoEscolar = await obtenerFechasAñoEscolar();
+    const { fechaUTC, fechaLocalPeru } = obtenerFechasActuales();
 
     // Verificar si estamos dentro del año escolar
+    const fechasAñoEscolar = await obtenerFechasAñoEscolar();
     const fueraAñoEscolar = verificarFueraAñoEscolar(
       fechaLocalPeru,
       fechasAñoEscolar.Inicio_Año_Escolar,
@@ -225,6 +270,16 @@ async function main() {
       "🚀 Iniciando sistema de actualización de listas de estudiantes..."
     );
 
+    // Inicializar reporte con todas las propiedades requeridas
+    console.log("\n📊 Inicializando reporte de actualización...");
+    const reporteActualizacion = inicializarReporteActualizacion(fechaUTC);
+
+    console.log(
+      `📋 Reporte inicializado con ${
+        Object.keys(reporteActualizacion.EstadoDeListasDeEstudiantes).length
+      } archivos`
+    );
+
     // 1. Obtener modificaciones específicas de estudiantes
     console.log("\n📋 Paso 1: Obteniendo modificaciones específicas...");
     const modificaciones = await obtenerModificacionesEspecificasEstudiantes();
@@ -237,16 +292,26 @@ async function main() {
     // 3. Procesar cada nivel y grado
     console.log("\n🔄 Paso 3: Procesando cada nivel y grado...");
 
+    let archivosActualizados = 0;
+    let archivosNoActualizados = 0;
+
     // Iterar por PRIMARIA
     console.log("\n📚 === PROCESANDO PRIMARIA ===");
     for (const grado of Object.values(GradosPrimaria)) {
       if (typeof grado === "number") {
-        await procesarNivelYGrado(
+        const fueActualizado = await procesarNivelYGrado(
           NivelEducativo.PRIMARIA,
           grado as GradosPrimaria,
           modificaciones,
-          archivosExistentes
+          archivosExistentes,
+          reporteActualizacion.EstadoDeListasDeEstudiantes
         );
+
+        if (fueActualizado) {
+          archivosActualizados++;
+        } else {
+          archivosNoActualizados++;
+        }
       }
     }
 
@@ -254,14 +319,61 @@ async function main() {
     console.log("\n🎓 === PROCESANDO SECUNDARIA ===");
     for (const grado of Object.values(GradosSecundaria)) {
       if (typeof grado === "number") {
-        await procesarNivelYGrado(
+        const fueActualizado = await procesarNivelYGrado(
           NivelEducativo.SECUNDARIA,
           grado as GradosSecundaria,
           modificaciones,
-          archivosExistentes
+          archivosExistentes,
+          reporteActualizacion.EstadoDeListasDeEstudiantes
         );
+
+        if (fueActualizado) {
+          archivosActualizados++;
+        } else {
+          archivosNoActualizados++;
+        }
       }
     }
+
+    // 4. Finalizar reporte y guardarlo
+    console.log(
+      "\n📊 Paso 4: Finalizando y guardando reporte de actualizaciones..."
+    );
+
+    // Actualizar fecha final del reporte
+    reporteActualizacion.Fecha_Actualizacion = fechaUTC;
+
+    console.log(
+      `💾 Guardando reporte de actualización con ${
+        Object.keys(reporteActualizacion.EstadoDeListasDeEstudiantes).length
+      } archivos registrados`
+    );
+
+    console.log(
+      `📊 Resumen de procesamiento: ${archivosActualizados} actualizados, ${archivosNoActualizados} sin cambios`
+    );
+
+    // Guardar reporte en Vercel Blobs
+    await guardarObjetoComoJSONEnBlobs(
+      reporteActualizacion,
+      NOMBRE_ARCHIVO_REPORTE_ACTUALIZACION_DE_LISTAS_DE_ESTUDIANTES
+    );
+
+    // Guardar reporte en Google Drive
+    await actualizarArchivoRespaldoEnGoogleDrive(
+      NOMBRE_ARCHIVO_REPORTE_ACTUALIZACION_DE_LISTAS_DE_ESTUDIANTES,
+      reporteActualizacion
+    );
+
+    console.log(`✅ Reporte de actualización guardado correctamente`);
+
+    // Mostrar resumen del reporte
+    console.log("\n📋 === RESUMEN DEL REPORTE ===");
+    Object.entries(reporteActualizacion.EstadoDeListasDeEstudiantes).forEach(
+      ([archivo, fecha]) => {
+        console.log(`📄 ${archivo}: ${fecha.toISOString()}`);
+      }
+    );
 
     console.log(
       "\n✅ Sistema de actualización de listas de estudiantes completado exitosamente"
