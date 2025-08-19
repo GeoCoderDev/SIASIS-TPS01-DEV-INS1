@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "SetDatosAsistenciaDiaria": "ts-node ./src/jobs/asistenciaDePersonal/SetDatosAsistenciaDiaria.ts",
     "SetAsistenciasYFaltasDePersonal": "ts-node ./src/jobs/asistenciaDePersonal/SetAsistenciasYFaltasDePersonal.ts",
-    "SetListasEstudiantes": "ts-node ./src/jobs/asistenciaEscolar/SetListasEstudiantes.ts",
+    "SetListasEstudiantes": "ts-node ./src/jobs/asistenciaEscolar/SetListasDeEstudiantes.ts",
     "postinstall": "npx prisma generate"
   },
   "author": "SIASIS",
