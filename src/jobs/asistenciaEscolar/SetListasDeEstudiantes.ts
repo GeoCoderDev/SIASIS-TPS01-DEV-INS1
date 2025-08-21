@@ -303,11 +303,58 @@ async function procesarNivelYGrado<T extends NivelEducativo>(
               `🔧 [${procesoId}] ✅ Aulas obtenidas: ${aulas.length} aulas`
             );
           } else {
+            // VERIFICACIÓN CRÍTICA: Comprobar si el archivo descargado tiene datos válidos
+            const tieneEstudiantes =
+              datosExistentes.ListaEstudiantes &&
+              datosExistentes.ListaEstudiantes.length > 0;
+            const tieneAulas =
+              datosExistentes.Aulas && datosExistentes.Aulas.length > 0;
+
             console.log(
-              `✅ [${procesoId}] Archivo existente está actualizado, no se requiere actualización`
+              `🔧 [${procesoId}] Verificando contenido del archivo existente:`
             );
-            debeActualizar = false;
-            fechaParaReporte = fechaArchivoExistente;
+            console.log(
+              `🔧 [${procesoId}] - Tiene estudiantes: ${tieneEstudiantes} (${
+                datosExistentes.ListaEstudiantes?.length || 0
+              })`
+            );
+            console.log(
+              `🔧 [${procesoId}] - Tiene aulas: ${tieneAulas} (${
+                datosExistentes.Aulas?.length || 0
+              })`
+            );
+
+            if (!tieneEstudiantes && !tieneAulas) {
+              console.log(
+                `🚨 [${procesoId}] ARCHIVO VACÍO DETECTADO: Forzando actualización a pesar de fecha más reciente`
+              );
+              debeActualizar = true;
+
+              console.log(
+                `🔧 [${procesoId}] Consultando estudiantes desde MongoDB...`
+              );
+              estudiantes = await obtenerEstudiantesPorGradoYNivel(
+                nivel,
+                grado as GradosPorNivel<typeof nivel>
+              );
+              console.log(
+                `🔧 [${procesoId}] ✅ Estudiantes obtenidos: ${estudiantes.length} estudiantes`
+              );
+
+              console.log(
+                `🔧 [${procesoId}] Consultando aulas desde MongoDB...`
+              );
+              aulas = await obtenerAulasPorGradoYNivel(nivel, grado);
+              console.log(
+                `🔧 [${procesoId}] ✅ Aulas obtenidas: ${aulas.length} aulas`
+              );
+            } else {
+              console.log(
+                `✅ [${procesoId}] Archivo existente está actualizado y tiene datos válidos, no se requiere actualización`
+              );
+              debeActualizar = false;
+              fechaParaReporte = fechaArchivoExistente;
+            }
           }
         } catch (downloadError) {
           console.error(
