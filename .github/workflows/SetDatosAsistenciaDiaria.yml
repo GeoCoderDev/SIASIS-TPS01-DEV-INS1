@@ -13,7 +13,7 @@ on:
   #     - master
 
   # Permite la ejecución manual para pruebas
-  workflow_dispatch:
+  # workflow_dispatch:
 
 jobs:
   ejecutar-script-asistencia:
@@ -29,15 +29,8 @@ jobs:
           node-version: "18"
           cache: "npm"
 
-      - name: Verificar y reparar dependencias
-        run: |
-          # Intentar npm ci primero
-          if ! npm ci; then
-            echo "⚠️ npm ci falló, regenerando package-lock.json..."
-            rm -f package-lock.json
-            npm install --package-lock-only
-            npm ci
-          fi
+      - name: Instalar dependencias
+        run: npm install # ✅ Usa npm install - más permisivo
 
       - name: Ejecutar script con ts-node
         run: |
