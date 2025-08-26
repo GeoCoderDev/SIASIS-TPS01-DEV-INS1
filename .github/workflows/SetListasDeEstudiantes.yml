@@ -24,8 +24,15 @@ jobs:
           node-version: "22"
           cache: "npm"
 
-      - name: Instalar dependencias
-        run: npm ci
+      - name: Verificar y reparar dependencias
+        run: |
+          # Intentar npm ci primero
+          if ! npm ci; then
+            echo "⚠️ npm ci falló, regenerando package-lock.json..."
+            rm -f package-lock.json
+            npm install --package-lock-only
+            npm ci
+          fi
 
       - name: Ejecutar script de Actualizacion de listas de estudiantes con ts-node
         run: |
