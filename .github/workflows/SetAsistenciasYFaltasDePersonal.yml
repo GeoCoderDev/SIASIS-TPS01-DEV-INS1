@@ -27,10 +27,6 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
-      # ❌ ELIMINAR ESTE PASO - ya no es necesario
-      # - name: Instalar ts-node y pg
-      #   run: npm install -g ts-node typescript && npm install pg
-
       - name: Ejecutar script con ts-node
         run: |
           echo "Ejecutando script..."
