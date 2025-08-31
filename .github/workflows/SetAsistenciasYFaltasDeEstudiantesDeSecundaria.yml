@@ -2,43 +2,36 @@ name: Ejecutar Script de registro de asistencias y faltas de Estudiantes de Secu
 
 on:
   schedule:
-    # Ejecutar a las 8:00 PM hora de Perú (UTC-5) de lunes a viernes
-    # En GitHub Actions se usa UTC, por lo que 8:00 PM en Perú es 1:00 AM (01:00) UTC del día siguiente
+    # Ejecutar a las 7:45 PM hora de Perú (UTC-5) de lunes a viernes
+    # En GitHub Actions se usa UTC, por lo que 7:45 PM en Perú es 12:45 AM (00:45) UTC del día siguiente
     # Solo en meses de marzo (3) a diciembre (12)
-    - cron: "0 1 * 3-12 2-6"
+    - cron: "45 0 * 3-12 2-6"
 
   # Permite la ejecución manual para pruebas
-  workflow_dispatch:
+  # workflow_dispatch:
 
 jobs:
-  ejecutar-script-asistencia-secundaria:
+  ejecutar-script-asistencia:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout del repositorio
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Configurar Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: "npm"
 
       - name: Instalar dependencias
-        run: npm ci
+        run: npm install
 
-      - name: Instalar ts-node y dependencias adicionales
-        run: npm install -g ts-node typescript && npm install pg
-
-      - name: Ejecutar script de asistencias de estudiantes de secundaria con ts-node
+      - name: Ejecutar script con ts-node
         run: |
-          echo "Ejecutando script de asistencias de estudiantes de secundaria..."
-          ts-node ./src/jobs/asistenciaEscolar/SetAsistenciasDeEstudiantesSecundaria.ts
+          echo "Ejecutando script..."
+          npx ts-node ./src/jobs/asistenciaEscolar/SetAsistenciasDeEstudiantesSecundaria.ts
         env:
-          RDP01_GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.RDP01_GOOGLE_SERVICE_ACCOUNT_EMAIL }}
-          RDP01_GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.RDP01_GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY }}
-          RDP01_GOOGLE_SERVICE_ACCOUNT_PROJECT_ID: ${{ secrets.RDP01_GOOGLE_SERVICE_ACCOUNT_PROJECT_ID }}
-          RDP01_GOOGLE_DRIVE_ROOT_SHARED_FOLDER_ID: ${{ secrets.RDP01_GOOGLE_DRIVE_ROOT_SHARED_FOLDER_ID }}
           RDP02_INS1_DATABASE_URL: ${{ secrets.RDP02_INS1_DATABASE_URL }}
           RDP02_INS2_DATABASE_URL: ${{ secrets.RDP02_INS2_DATABASE_URL }}
           RDP02_INS3_DATABASE_URL: ${{ secrets.RDP02_INS3_DATABASE_URL }}
@@ -48,16 +41,14 @@ jobs:
           RDP03_INS4_DATABASE_URL_DESA: ${{ secrets.RDP03_INS4_DATABASE_URL_DESA }}
           RDP03_INS5_DATABASE_URL_DESA: ${{ secrets.RDP03_INS5_DATABASE_URL_DESA }}
           RDP04_VERCEL_BLOB_INS1_READ_WRITE_TOKEN: ${{ secrets.RDP04_VERCEL_BLOB_INS1_READ_WRITE_TOKEN }}
-          RDP04_VERCEL_BLOB_INS2_READ_WRITE_TOKEN: ${{ secrets.RDP04_VERCEL_BLOB_INS2_READ_WRITE_TOKEN }}
-          RDP04_VERCEL_BLOB_INS3_READ_WRITE_TOKEN: ${{ secrets.RDP04_VERCEL_BLOB_INS3_READ_WRITE_TOKEN }}
-          RDP04_VERCEL_BLOB_INS4_READ_WRITE_TOKEN: ${{ secrets.RDP04_VERCEL_BLOB_INS4_READ_WRITE_TOKEN }}
-          RDP04_VERCEL_BLOB_INS5_READ_WRITE_TOKEN: ${{ secrets.RDP04_VERCEL_BLOB_INS5_READ_WRITE_TOKEN }}
+          RDP01_GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.RDP01_GOOGLE_SERVICE_ACCOUNT_EMAIL }}
+          RDP01_GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.RDP01_GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY }}
+          RDP01_GOOGLE_SERVICE_ACCOUNT_PROJECT_ID: ${{ secrets.RDP01_GOOGLE_SERVICE_ACCOUNT_PROJECT_ID }}
+          RDP01_GOOGLE_DRIVE_ROOT_SHARED_FOLDER_ID: ${{ secrets.RDP01_GOOGLE_DRIVE_ROOT_SHARED_FOLDER_ID }}
           RDP05_INS1_REDIS_BD_BASE_URL_API: ${{ secrets.RDP05_INS1_REDIS_BD_BASE_URL_API }}
           RDP05_INS1_REDIS_BD_TOKEN_FOR_API: ${{ secrets.RDP05_INS1_REDIS_BD_TOKEN_FOR_API }}
           RDP05_INS2_REDIS_BD_BASE_URL_API: ${{ secrets.RDP05_INS2_REDIS_BD_BASE_URL_API }}
           RDP05_INS2_REDIS_BD_TOKEN_FOR_API: ${{ secrets.RDP05_INS2_REDIS_BD_TOKEN_FOR_API }}
           RDP05_INS3_REDIS_BD_BASE_URL_API: ${{ secrets.RDP05_INS3_REDIS_BD_BASE_URL_API }}
           RDP05_INS3_REDIS_BD_TOKEN_FOR_API: ${{ secrets.RDP05_INS3_REDIS_BD_TOKEN_FOR_API }}
-          SE01_SIASIS_EMAIL_USER: ${{ secrets.SE01_SIASIS_EMAIL_USER }}
-          SE01_SIASIS_EMAIL_APPLICATION_PASSWORD: ${{ secrets.SE01_SIASIS_EMAIL_APPLICATION_PASSWORD }}
           ENTORNO: ${{ secrets.ENTORNO }}

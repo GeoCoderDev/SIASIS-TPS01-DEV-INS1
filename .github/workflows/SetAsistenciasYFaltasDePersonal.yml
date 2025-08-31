@@ -25,7 +25,7 @@ jobs:
           cache: "npm"
 
       - name: Instalar dependencias
-        run: npm install # ✅ Usa npm install - más permisivo
+        run: npm install
 
       - name: Ejecutar script con ts-node
         run: |
