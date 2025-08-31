@@ -30,7 +30,7 @@ jobs:
       - name: Ejecutar script con ts-node
         run: |
           echo "Ejecutando script..."
-          npx ts-node ./src/jobs/asistenciaEscolar/SetAsistenciasDeEstudiantesSecundaria.ts
+          npx ts-node ./src/jobs/asistenciaEscolar/SetAsistenciasYFaltasEstudiantesSecundaria.ts
         env:
           RDP02_INS1_DATABASE_URL: ${{ secrets.RDP02_INS1_DATABASE_URL }}
           RDP02_INS2_DATABASE_URL: ${{ secrets.RDP02_INS2_DATABASE_URL }}
