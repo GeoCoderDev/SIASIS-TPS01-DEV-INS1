@@ -373,7 +373,7 @@ model T_A_E_P_1 {
   Id_Asistencia_Escolar_Mensual String @id
   Id_Estudiante                 String @db.VarChar(20)
   Mes                           Int    @db.SmallInt
-  Estados                       String @db.Text
+  Asistencias_Mensuales         String @db.Text
 
   estudiante T_Estudiantes @relation(fields: [Id_Estudiante], references: [Id_Estudiante], onDelete: Cascade)
 
@@ -385,7 +385,7 @@ model T_A_E_P_2 {
   Id_Asistencia_Escolar_Mensual String @id
   Id_Estudiante                 String @db.VarChar(20)
   Mes                           Int    @db.SmallInt
-  Estados                       String @db.Text
+  Asistencias_Mensuales         String @db.Text
 
   estudiante T_Estudiantes @relation(fields: [Id_Estudiante], references: [Id_Estudiante], onDelete: Cascade)
 
@@ -397,7 +397,7 @@ model T_A_E_P_3 {
   Id_Asistencia_Escolar_Mensual String @id
   Id_Estudiante                 String @db.VarChar(20)
   Mes                           Int    @db.SmallInt
-  Estados                       String @db.Text
+  Asistencias_Mensuales         String @db.Text
 
   estudiante T_Estudiantes @relation(fields: [Id_Estudiante], references: [Id_Estudiante], onDelete: Cascade)
 
@@ -409,7 +409,7 @@ model T_A_E_P_4 {
   Id_Asistencia_Escolar_Mensual String @id
   Id_Estudiante                 String @db.VarChar(20)
   Mes                           Int    @db.SmallInt
-  Estados                       String @db.Text
+  Asistencias_Mensuales         String @db.Text
 
   estudiante T_Estudiantes @relation(fields: [Id_Estudiante], references: [Id_Estudiante], onDelete: Cascade)
 
@@ -421,7 +421,7 @@ model T_A_E_P_5 {
   Id_Asistencia_Escolar_Mensual String @id
   Id_Estudiante                 String @db.VarChar(20)
   Mes                           Int    @db.SmallInt
-  Estados                       String @db.Text
+  Asistencias_Mensuales         String @db.Text
 
   estudiante T_Estudiantes @relation(fields: [Id_Estudiante], references: [Id_Estudiante], onDelete: Cascade)
 
@@ -433,7 +433,7 @@ model T_A_E_P_6 {
   Id_Asistencia_Escolar_Mensual String @id
   Id_Estudiante                 String @db.VarChar(20)
   Mes                           Int    @db.SmallInt
-  Estados                       String @db.Text
+  Asistencias_Mensuales         String @db.Text
 
   estudiante T_Estudiantes @relation(fields: [Id_Estudiante], references: [Id_Estudiante], onDelete: Cascade)
 
@@ -447,7 +447,7 @@ model T_A_E_S_1 {
   Id_Asistencia_Escolar_Mensual String @id
   Id_Estudiante                 String @db.VarChar(20)
   Mes                           Int    @db.SmallInt
-  Estados                       String @db.Text
+  Asistencias_Mensuales         String @db.Text
 
   estudiante T_Estudiantes @relation(fields: [Id_Estudiante], references: [Id_Estudiante], onDelete: Cascade)
 
@@ -459,7 +459,7 @@ model T_A_E_S_2 {
   Id_Asistencia_Escolar_Mensual String @id
   Id_Estudiante                 String @db.VarChar(20)
   Mes                           Int    @db.SmallInt
-  Estados                       String @db.Text
+  Asistencias_Mensuales         String @db.Text
 
   estudiante T_Estudiantes @relation(fields: [Id_Estudiante], references: [Id_Estudiante], onDelete: Cascade)
 
@@ -471,7 +471,7 @@ model T_A_E_S_3 {
   Id_Asistencia_Escolar_Mensual String @id
   Id_Estudiante                 String @db.VarChar(20)
   Mes                           Int    @db.SmallInt
-  Estados                       String @db.Text
+  Asistencias_Mensuales         String @db.Text
 
   estudiante T_Estudiantes @relation(fields: [Id_Estudiante], references: [Id_Estudiante], onDelete: Cascade)
 
@@ -483,7 +483,7 @@ model T_A_E_S_4 {
   Id_Asistencia_Escolar_Mensual String @id
   Id_Estudiante                 String @db.VarChar(20)
   Mes                           Int    @db.SmallInt
-  Estados                       String @db.Text
+  Asistencias_Mensuales         String @db.Text
 
   estudiante T_Estudiantes @relation(fields: [Id_Estudiante], references: [Id_Estudiante], onDelete: Cascade)
 
@@ -495,7 +495,7 @@ model T_A_E_S_5 {
   Id_Asistencia_Escolar_Mensual String @id
   Id_Estudiante                 String @db.VarChar(20)
   Mes                           Int    @db.SmallInt
-  Estados                       String @db.Text
+  Asistencias_Mensuales         String @db.Text
 
   estudiante T_Estudiantes @relation(fields: [Id_Estudiante], references: [Id_Estudiante], onDelete: Cascade)
 

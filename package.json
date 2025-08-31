@@ -8,6 +8,7 @@
     "SetDatosAsistenciaDiaria": "ts-node ./src/jobs/asistenciaDePersonal/SetDatosAsistenciaDiaria.ts",
     "SetAsistenciasYFaltasDePersonal": "ts-node ./src/jobs/asistenciaDePersonal/SetAsistenciasYFaltasDePersonal.ts",
     "SetListasEstudiantes": "ts-node ./src/jobs/asistenciaEscolar/SetListasDeEstudiantes.ts",
+    "SetAsistenciasYFaltasEstudiantesSecundaria": "ts-node ./src/jobs/asistenciaEscolar/SetAsistenciasYFaltasEstudiantesSecundaria.ts",
     "postinstall": "npx prisma generate"
   },
   "author": "SIASIS",
