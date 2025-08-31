@@ -7,11 +7,6 @@ on:
     # Solo en meses de marzo (3) a diciembre (12)
     - cron: "30 9 * 3-12 1-5"
 
-  # Añadido: Trigger para ejecutar en push a master
-  # push:
-  #   branches:
-  #     - master
-
   # Permite la ejecución manual para pruebas
   workflow_dispatch:
 
@@ -21,24 +16,21 @@ jobs:
 
     steps:
       - name: Checkout del repositorio
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Configurar Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: "npm"
 
       - name: Instalar dependencias
-        run: npm ci
-
-      - name: Instalar ts-node y dependencias adicionales
-        run: npm install -g ts-node typescript
+        run: npm install # ✅ Usa npm install - más permisivo
 
       - name: Ejecutar script de Actualizacion de listas de estudiantes con ts-node
         run: |
           echo "Ejecutando script de Actualizacion de listas de estudiantes..."
-          ts-node ./src/jobs/asistenciaEscolar/SetListasDeEstudiantes.ts
+          npx ts-node ./src/jobs/asistenciaEscolar/SetListasDeEstudiantes.ts
         env:
           # Variables de Google Drive
           RDP01_GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.RDP01_GOOGLE_SERVICE_ACCOUNT_EMAIL }}

@@ -13,7 +13,7 @@ on:
   #     - master
 
   # Permite la ejecución manual para pruebas
-  # workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
   ejecutar-script-asistencia:
@@ -21,24 +21,21 @@ jobs:
 
     steps:
       - name: Checkout del repositorio
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Configurar Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: "18"
           cache: "npm"
 
       - name: Instalar dependencias
-        run: npm ci
-
-      - name: Instalar ts-node y pg
-        run: npm install -g ts-node typescript && npm install pg
+        run: npm install # ✅ Usa npm install - más permisivo
 
       - name: Ejecutar script con ts-node
         run: |
           echo "Ejecutando script..."
-          ts-node ./src/jobs/asistenciaDePersonal/SetDatosAsistenciaDiaria.ts
+          npx ts-node ./src/jobs/asistenciaDePersonal/SetDatosAsistenciaDiaria.ts
         env:
           RDP01_GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.RDP01_GOOGLE_SERVICE_ACCOUNT_EMAIL }}
           RDP01_GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.RDP01_GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY }}
