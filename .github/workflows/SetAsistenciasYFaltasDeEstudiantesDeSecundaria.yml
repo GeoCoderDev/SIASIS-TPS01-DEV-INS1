@@ -2,16 +2,16 @@ name: Ejecutar Script de registro de asistencias y faltas de Estudiantes de Secu
 
 on:
   schedule:
-    # Ejecutar a las 7:30 PM hora de Perú (UTC-5) de lunes a viernes
-    # En GitHub Actions se usa UTC, por lo que 7:30 PM en Perú es 12:30 AM (00:30) UTC del día siguiente
+    # Ejecutar a las 8:00 PM hora de Perú (UTC-5) de lunes a viernes
+    # En GitHub Actions se usa UTC, por lo que 8:00 PM en Perú es 1:00 AM (01:00) UTC del día siguiente
     # Solo en meses de marzo (3) a diciembre (12)
-    - cron: "45 0 * 3-12 2-6"
+    - cron: "0 1 * 3-12 2-6"
 
   # Permite la ejecución manual para pruebas
-  # workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
-  ejecutar-script-asistencia:
+  ejecutar-script-asistencia-secundaria:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,13 +27,13 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
-      - name: Instalar ts-node y pg
+      - name: Instalar ts-node y dependencias adicionales
         run: npm install -g ts-node typescript && npm install pg
 
-      - name: Ejecutar script con ts-node
+      - name: Ejecutar script de asistencias de estudiantes de secundaria con ts-node
         run: |
-          echo "Ejecutando script..."
-        #   ts-node ./src/jobs/asistenciaDePersonal/SetAsistenciasYFaltasDePersonal.ts
+          echo "Ejecutando script de asistencias de estudiantes de secundaria..."
+          ts-node ./src/jobs/asistenciaEscolar/SetAsistenciasDeEstudiantesSecundaria.ts
         env:
           RDP01_GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.RDP01_GOOGLE_SERVICE_ACCOUNT_EMAIL }}
           RDP01_GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.RDP01_GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY }}
@@ -42,6 +42,11 @@ jobs:
           RDP02_INS1_DATABASE_URL: ${{ secrets.RDP02_INS1_DATABASE_URL }}
           RDP02_INS2_DATABASE_URL: ${{ secrets.RDP02_INS2_DATABASE_URL }}
           RDP02_INS3_DATABASE_URL: ${{ secrets.RDP02_INS3_DATABASE_URL }}
+          RDP03_INS1_DATABASE_URL_DESA: ${{ secrets.RDP03_INS1_DATABASE_URL_DESA }}
+          RDP03_INS2_DATABASE_URL_DESA: ${{ secrets.RDP03_INS2_DATABASE_URL_DESA }}
+          RDP03_INS3_DATABASE_URL_DESA: ${{ secrets.RDP03_INS3_DATABASE_URL_DESA }}
+          RDP03_INS4_DATABASE_URL_DESA: ${{ secrets.RDP03_INS4_DATABASE_URL_DESA }}
+          RDP03_INS5_DATABASE_URL_DESA: ${{ secrets.RDP03_INS5_DATABASE_URL_DESA }}
           RDP04_VERCEL_BLOB_INS1_READ_WRITE_TOKEN: ${{ secrets.RDP04_VERCEL_BLOB_INS1_READ_WRITE_TOKEN }}
           RDP04_VERCEL_BLOB_INS2_READ_WRITE_TOKEN: ${{ secrets.RDP04_VERCEL_BLOB_INS2_READ_WRITE_TOKEN }}
           RDP04_VERCEL_BLOB_INS3_READ_WRITE_TOKEN: ${{ secrets.RDP04_VERCEL_BLOB_INS3_READ_WRITE_TOKEN }}
