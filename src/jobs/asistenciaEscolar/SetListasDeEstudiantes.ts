@@ -28,7 +28,7 @@ import verificarFueraAñoEscolar from "../../core/utils/helpers/verificators/ver
 import { obtenerFechasAñoEscolar } from "../../core/databases/queries/RDP02/fechas-importantes/obtenerFechasAñoEscolar";
 import { NOMBRE_ARCHIVO_REPORTE_ACTUALIZACION_DE_LISTAS_DE_ESTUDIANTES } from "../../constants/NOMBRE_ARCHIVOS_SISTEMA";
 import { ReporteActualizacionDeListasEstudiantes } from "../../interfaces/shared/Asistencia/ReporteModificacionesListasDeEstudiantes";
-
+import { registrarFaltasAutomaticasEstudiantesInactivos } from "../../core/databases/queries/RDP03/asistencias-escolares/registrarAsistenciaAutoNullParaEstudiantesInactivos";
 /**
  * Inicializa el reporte con todos los archivos de estudiantes y fechas por defecto
  */
@@ -378,6 +378,33 @@ async function main() {
     console.log(
       "\n✅ Sistema de actualización de listas de estudiantes completado exitosamente"
     );
+
+    // NUEVA FUNCIONALIDAD: Registro de faltas automáticas para estudiantes inactivos
+    console.log(
+      "\n🔄 Iniciando registro de faltas automáticas para estudiantes inactivos..."
+    );
+
+    try {
+      const resultadoFaltasInactivos =
+        await registrarFaltasAutomaticasEstudiantesInactivos();
+
+      console.log(
+        "✅ Registro de faltas automáticas para estudiantes inactivos completado:"
+      );
+      console.log(
+        `- Total estudiantes inactivos procesados: ${resultadoFaltasInactivos.totalEstudiantesInactivos}`
+      );
+      console.log(
+        `- Faltas completas registradas: ${resultadoFaltasInactivos.faltasCompletasRegistradas}`
+      );
+      console.log(`- Errores encontrados: ${resultadoFaltasInactivos.errores}`);
+    } catch (faltasError) {
+      // No interrumpimos el proceso principal por un error en el registro de faltas
+      console.error(
+        "❌ Error al procesar faltas automáticas para estudiantes inactivos, pero continuando:",
+        faltasError
+      );
+    }
   } catch (error) {
     console.error(
       "❌ Error en el sistema de actualización de listas de estudiantes:",
