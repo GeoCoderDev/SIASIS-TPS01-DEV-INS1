@@ -1,8 +1,10 @@
+import { ModoRegistro } from "./ModoRegistroPersonal";
+
 export enum EstadosAsistencia {
   Temprano = "A",
   Tarde = "T",
   Falta = "F",
   Inactivo = "-",
-  Feriado = "E",
+  Feriado = ModoRegistro.Entrada,
   Vacaciones = "V",
 }

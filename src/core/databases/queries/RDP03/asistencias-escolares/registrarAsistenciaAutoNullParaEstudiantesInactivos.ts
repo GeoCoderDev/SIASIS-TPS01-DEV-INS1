@@ -204,11 +204,14 @@ async function registrarFaltaCompletaEstudianteInactivo(
       // Agregar falta completa para el día
       estadosActualizados[dia] = null; // null indica falta completa del día
 
-      // Actualizar registro existente
+      // Actualizar registro existente usando Id_Estudiante + Mes (no _id)
       const operacionActualizar: MongoOperation = {
         operation: "updateOne",
         collection: estudiante.tablaAsistencia as RDP03_Nombres_Tablas,
-        filter: { _id: registroExistente._id },
+        filter: {
+          Id_Estudiante: estudiante.Id_Estudiante,
+          Mes: mes,
+        },
         data: {
           $set: {
             Estados: JSON.stringify(estadosActualizados),

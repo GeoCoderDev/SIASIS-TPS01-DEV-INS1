@@ -1,3 +1,4 @@
+import { ModoRegistro } from "../../../../../interfaces/shared/ModoRegistroPersonal";
 import { NivelEducativo } from "../../../../../interfaces/shared/NivelEducativo";
 import { MongoOperation } from "../../../../../interfaces/shared/RDP03/MongoOperation";
 import { TABLAS_ASISTENCIAS_ESCOLARES } from "../../../../../interfaces/shared/RDP03/TablasDeAsistenciaEscolar";
@@ -204,7 +205,7 @@ export async function registrarAsistenciasEstudiantesSecundariaDesdeRedis(
         }
 
         // Contar estadísticas
-        if (modoRegistro === "E") {
+        if (modoRegistro === ModoRegistro.Entrada) {
           registrosEntradaGuardados++;
         } else {
           registrosSalidaGuardados++;

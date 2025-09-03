@@ -1,10 +1,12 @@
-import { CONTROL_ASISTENCIA_DE_SALIDA_SECUNDARIA } from "../../../../../constants/ASISTENCIA_ENTRADA_SALIDA_ESCOLAR";
+import RDP03_DB_INSTANCES from "../../../connectors/mongodb";
+
 import { MongoOperation } from "../../../../../interfaces/shared/RDP03/MongoOperation";
 import {
   EstudianteActivoSecundaria,
   RegistroEstudianteSecundariaRedis,
 } from "../../../../../jobs/asistenciaEscolar/SetAsistenciasYFaltasEstudiantesSecundaria";
-import RDP03_DB_INSTANCES from "../../../connectors/mongodb";
+import { CONTROL_ASISTENCIA_DE_SALIDA_SECUNDARIA } from "../../../../../constants/ASISTENCIA_ENTRADA_SALIDA_ESCOLAR";
+import { ModoRegistro } from "../../../../../interfaces/shared/ModoRegistroPersonal";
 
 // Interfaz para el resultado del registro de faltas
 interface ResultadoRegistroFaltas {
@@ -50,7 +52,7 @@ export async function registrarFaltasEstudiantesSecundaria(
     const estudiantesConSalida = new Set<string>();
 
     for (const registro of registrosProcesados) {
-      if (registro.modoRegistro === "E") {
+      if (registro.modoRegistro === ModoRegistro.Entrada) {
         estudiantesConEntrada.add(registro.idEstudiante);
       } else if (registro.modoRegistro === "S") {
         estudiantesConSalida.add(registro.idEstudiante);
@@ -76,7 +78,7 @@ export async function registrarFaltasEstudiantesSecundaria(
             estudiante,
             mes,
             dia,
-            "E"
+            ModoRegistro.Entrada
           );
 
           if (faltaRegistrada) {
@@ -95,7 +97,7 @@ export async function registrarFaltasEstudiantesSecundaria(
             estudiante,
             mes,
             dia,
-            "S"
+            ModoRegistro.Salida
           );
 
           if (faltaRegistrada) {
@@ -138,7 +140,7 @@ async function registrarFaltaIndividual(
   estudiante: EstudianteActivoSecundaria,
   mes: number,
   dia: number,
-  modoRegistro: "E" | "S"
+  modoRegistro: ModoRegistro
 ): Promise<boolean> {
   try {
     // Verificar si ya existe un registro para este estudiante y mes
@@ -188,11 +190,14 @@ async function registrarFaltaIndividual(
         DesfaseSegundos: null, // null indica falta
       };
 
-      // Actualizar registro existente
+      // Actualizar registro existente usando Id_Estudiante + Mes (no _id)
       const operacionActualizar: MongoOperation = {
         operation: "updateOne",
         collection: estudiante.tablaAsistencia,
-        filter: { _id: registroExistente._id },
+        filter: {
+          Id_Estudiante: estudiante.idEstudiante,
+          Mes: mes,
+        },
         data: {
           $set: {
             Estados: JSON.stringify(estadosActualizados),
@@ -233,7 +238,8 @@ async function registrarFaltaIndividual(
       await RDP03_DB_INSTANCES.executeOperation(operacionUpsert);
     }
 
-    const tipoRegistro = modoRegistro === "E" ? "entrada" : "salida";
+    const tipoRegistro =
+      modoRegistro === ModoRegistro.Entrada ? "entrada" : "salida";
     console.log(
       `❌ Falta de ${tipoRegistro} registrada para ${estudiante.nombreCompleto} (${estudiante.idEstudiante}) en día ${dia}`
     );
