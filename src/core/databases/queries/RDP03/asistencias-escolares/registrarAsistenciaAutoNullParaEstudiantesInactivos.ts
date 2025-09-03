@@ -1,3 +1,4 @@
+import { RegistroAsistenciaExistente } from "../../../../../interfaces/shared/AsistenciasEscolares";
 import { NivelEducativo } from "../../../../../interfaces/shared/NivelEducativo";
 import { MongoOperation } from "../../../../../interfaces/shared/RDP03/MongoOperation";
 import { RDP03_Nombres_Tablas } from "../../../../../interfaces/shared/RDP03/RDP03_Tablas";
@@ -178,31 +179,33 @@ async function registrarFaltaCompletaEstudianteInactivo(
       },
     };
 
-    const registroExistente = await RDP03_DB_INSTANCES.executeOperation(
+    const registroExistente = (await RDP03_DB_INSTANCES.executeOperation(
       operacionBuscar
-    );
+    )) as RegistroAsistenciaExistente | null;
 
-    let estadosActualizados: Record<number, null>;
+    let asistenciasMensualesActualizadas: Record<number, null>;
 
     if (registroExistente) {
       // Ya existe registro para este mes, verificar si ya tiene falta registrada
       try {
-        estadosActualizados = JSON.parse(registroExistente.Estados);
+        asistenciasMensualesActualizadas = JSON.parse(
+          registroExistente.Asistencias_Mensuales
+        );
       } catch (parseError) {
         console.warn(
           `⚠️ Error parseando estados existentes para estudiante ${estudiante.Id_Estudiante}, iniciando nuevo registro`
         );
-        estadosActualizados = {};
+        asistenciasMensualesActualizadas = {};
       }
 
       // Verificar si ya existe registro para este día
-      if (estadosActualizados[dia] !== undefined) {
+      if (asistenciasMensualesActualizadas[dia] !== undefined) {
         // Ya existe registro para este día, no sobrescribir
         return false;
       }
 
       // Agregar falta completa para el día
-      estadosActualizados[dia] = null; // null indica falta completa del día
+      asistenciasMensualesActualizadas[dia] = null; // null indica falta completa del día
 
       // Actualizar registro existente usando Id_Estudiante + Mes (no _id)
       const operacionActualizar: MongoOperation = {
@@ -214,7 +217,9 @@ async function registrarFaltaCompletaEstudianteInactivo(
         },
         data: {
           $set: {
-            Estados: JSON.stringify(estadosActualizados),
+            Asistencias_Mensuales: JSON.stringify(
+              asistenciasMensualesActualizadas
+            ),
           },
         },
       };
@@ -222,7 +227,7 @@ async function registrarFaltaCompletaEstudianteInactivo(
       await RDP03_DB_INSTANCES.executeOperation(operacionActualizar);
     } else {
       // No existe registro para este mes, crear uno nuevo con la falta completa
-      estadosActualizados = {
+      asistenciasMensualesActualizadas = {
         [dia]: null, // null indica falta completa del día
       };
 
@@ -237,7 +242,9 @@ async function registrarFaltaCompletaEstudianteInactivo(
           $set: {
             Id_Estudiante: estudiante.Id_Estudiante,
             Mes: mes,
-            Estados: JSON.stringify(estadosActualizados),
+            Asistencias_Mensuales: JSON.stringify(
+              asistenciasMensualesActualizadas
+            ),
           },
         },
         options: {

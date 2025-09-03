@@ -7,6 +7,7 @@ import {
 } from "../../../../../jobs/asistenciaEscolar/SetAsistenciasYFaltasEstudiantesSecundaria";
 import { CONTROL_ASISTENCIA_DE_SALIDA_SECUNDARIA } from "../../../../../constants/ASISTENCIA_ENTRADA_SALIDA_ESCOLAR";
 import { ModoRegistro } from "../../../../../interfaces/shared/ModoRegistroPersonal";
+import { RegistroAsistenciaExistente } from "../../../../../interfaces/shared/AsistenciasEscolares";
 
 // Interfaz para el resultado del registro de faltas
 interface ResultadoRegistroFaltas {
@@ -14,14 +15,6 @@ interface ResultadoRegistroFaltas {
   faltasSalidaRegistradas: number;
   estudiantesSinEntrada: EstudianteActivoSecundaria[];
   estudiantesSinSalida?: EstudianteActivoSecundaria[];
-}
-
-// Interfaz para el registro existente en MongoDB
-interface RegistroAsistenciaExistente {
-  _id: string;
-  Id_Estudiante: string;
-  Mes: number;
-  Estados: string;
 }
 
 /**
@@ -157,7 +150,7 @@ async function registrarFaltaIndividual(
       operacionBuscar
     )) as RegistroAsistenciaExistente | null;
 
-    let estadosActualizados: Record<
+    let asistenciasMensualesActualizadas: Record<
       number,
       Record<string, { DesfaseSegundos: number | null }>
     >;
@@ -165,28 +158,30 @@ async function registrarFaltaIndividual(
     if (registroExistente) {
       // Ya existe registro para este mes, verificar si ya tiene falta registrada
       try {
-        estadosActualizados = JSON.parse(registroExistente.Estados);
+        asistenciasMensualesActualizadas = JSON.parse(
+          registroExistente.Asistencias_Mensuales
+        );
       } catch (parseError) {
         console.warn(
           `⚠️ Error parseando estados existentes para estudiante ${estudiante.idEstudiante}, iniciando nuevo registro`
         );
-        estadosActualizados = {};
+        asistenciasMensualesActualizadas = {};
       }
 
       // Verificar si ya existe registro para este día y modo
       if (
-        estadosActualizados[dia] &&
-        estadosActualizados[dia][modoRegistro] !== undefined
+        asistenciasMensualesActualizadas[dia] &&
+        asistenciasMensualesActualizadas[dia][modoRegistro] !== undefined
       ) {
         // Ya existe registro para este día y modo, no sobrescribir
         return false;
       }
 
       // Agregar falta
-      if (!estadosActualizados[dia]) {
-        estadosActualizados[dia] = {};
+      if (!asistenciasMensualesActualizadas[dia]) {
+        asistenciasMensualesActualizadas[dia] = {};
       }
-      estadosActualizados[dia][modoRegistro] = {
+      asistenciasMensualesActualizadas[dia][modoRegistro] = {
         DesfaseSegundos: null, // null indica falta
       };
 
@@ -200,7 +195,9 @@ async function registrarFaltaIndividual(
         },
         data: {
           $set: {
-            Estados: JSON.stringify(estadosActualizados),
+            Asistencias_Mensuales: JSON.stringify(
+              asistenciasMensualesActualizadas
+            ),
           },
         },
       };
@@ -208,7 +205,7 @@ async function registrarFaltaIndividual(
       await RDP03_DB_INSTANCES.executeOperation(operacionActualizar);
     } else {
       // No existe registro para este mes, crear uno nuevo con la falta
-      estadosActualizados = {
+      asistenciasMensualesActualizadas = {
         [dia]: {
           [modoRegistro]: {
             DesfaseSegundos: null, // null indica falta
@@ -227,7 +224,9 @@ async function registrarFaltaIndividual(
           $set: {
             Id_Estudiante: estudiante.idEstudiante,
             Mes: mes,
-            Estados: JSON.stringify(estadosActualizados),
+            Asistencias_Mensuales: JSON.stringify(
+              asistenciasMensualesActualizadas
+            ),
           },
         },
         options: {
