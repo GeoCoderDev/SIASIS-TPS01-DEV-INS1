@@ -23,7 +23,7 @@ import { obtenerFechasAñoEscolar } from "../../core/databases/queries/RDP02/fec
 import verificarFueraAñoEscolar from "../../core/databases/queries/RDP02/fechas-importantes/verificarDentroAñoEscolar";
 import { verificarDentroSemanaGestion } from "../../core/databases/queries/RDP02/fechas-importantes/verificarDentroSemanaGestion";
 import { procesarYGuardarAsistenciasDiarias } from "../../core/utils/helpers/processors/procesarYGuadarAsistenciasDiarias";
-import { T_Aulas } from "@prisma/client";
+import { T_Aulas, T_Vacaciones_Interescolares } from "@prisma/client";
 
 // Interfaz para registros de estudiantes desde Redis
 export interface RegistroEstudianteSecundariaRedis {
@@ -151,12 +151,15 @@ async function obtenerRegistrosAsistenciaEstudiantesSecundariaRedis(): Promise<
  */
 function verificarPeriodoEspecial(
   fechaLocal: Date,
-  vacaciones: Array<{ Inicio: Date; Fin: Date }>,
+  vacaciones: T_Vacaciones_Interescolares[],
   semanaGestion: { Inicio: Date; Fin: Date } | null
 ): { esVacaciones: boolean; esSemanaGestion: boolean } {
   // Verificar vacaciones
   const esVacaciones = vacaciones.some((vacacion) => {
-    return fechaLocal >= vacacion.Inicio && fechaLocal <= vacacion.Fin;
+    return (
+      fechaLocal >= new Date(vacacion.Fecha_Inicio) &&
+      fechaLocal <= new Date(vacacion.Fecha_Conclusion)
+    );
   });
 
   // Verificar semana de gestión
@@ -238,6 +241,7 @@ async function main() {
     // ✅ VALIDACIÓN 3: ¿Estamos en vacaciones interescolares?
     console.log("3️⃣ Verificando si estamos en vacaciones interescolares...");
     const vacacionesInterescolares = await obtenerVacacionesInterescolares();
+
     const semanaGestion = await obtenerSemanaDeGestion();
 
     const { esVacaciones, esSemanaGestion } = verificarPeriodoEspecial(
