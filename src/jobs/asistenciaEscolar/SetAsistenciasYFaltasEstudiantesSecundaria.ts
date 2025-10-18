@@ -24,6 +24,7 @@ import verificarFueraAñoEscolar from "../../core/databases/queries/RDP02/fechas
 import { verificarDentroSemanaGestion } from "../../core/databases/queries/RDP02/fechas-importantes/verificarDentroSemanaGestion";
 import { procesarYGuardarAsistenciasDiarias } from "../../core/utils/helpers/processors/procesarYGuadarAsistenciasDiarias";
 import { T_Aulas, T_Vacaciones_Interescolares } from "@prisma/client";
+import { normalizarFecha } from "../../core/utils/helpers/formatters/normalizarFechasSinHoras";
 
 // Interfaz para registros de estudiantes desde Redis
 export interface RegistroEstudianteSecundariaRedis {
@@ -154,22 +155,30 @@ function verificarPeriodoEspecial(
   vacaciones: T_Vacaciones_Interescolares[],
   semanaGestion: { Inicio: Date; Fin: Date } | null
 ): { esVacaciones: boolean; esSemanaGestion: boolean } {
+  // Normalizar la fecha local (establecer hora a 00:00:00)
+  const fechaLocalNormalizada = normalizarFecha(fechaLocal);
+
   // Verificar vacaciones
   const esVacaciones = vacaciones.some((vacacion) => {
+    const inicioVacaciones = normalizarFecha(new Date(vacacion.Fecha_Inicio));
+    const finVacaciones = normalizarFecha(new Date(vacacion.Fecha_Conclusion));
+
     return (
-      fechaLocal >= new Date(vacacion.Fecha_Inicio) &&
-      fechaLocal <= new Date(vacacion.Fecha_Conclusion)
+      fechaLocalNormalizada >= inicioVacaciones &&
+      fechaLocalNormalizada <= finVacaciones
     );
   });
 
   // Verificar semana de gestión
   const esSemanaGestion = semanaGestion
-    ? verificarDentroSemanaGestion(fechaLocal, semanaGestion)
+    ? verificarDentroSemanaGestion(fechaLocalNormalizada, {
+        Inicio: normalizarFecha(semanaGestion.Inicio),
+        Fin: normalizarFecha(semanaGestion.Fin),
+      })
     : false;
 
   return { esVacaciones, esSemanaGestion: Boolean(esSemanaGestion) };
 }
-
 // Códigos de salida
 const EXIT_CODES = {
   SUCCESS: 0, // Éxito: Se procesaron asistencias
